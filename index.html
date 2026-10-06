@@ -1469,6 +1469,9 @@ form.addEventListener("submit",e=>{
       name: participantName,
       email: participantEmail,
       function: participantFunction,
+      s1: s1,
+      s2: s2,
+      s3: s3,
       overallScore: avgOverall.toFixed(2),
       s1Score: avgS1.toFixed(2),
       s2Score: avgS2.toFixed(2),
@@ -1811,16 +1814,26 @@ function resetAllData() {
   }
 }
 
-// Export CSV
+// Export CSV (Full 28 Columns)
 function exportCSV() {
   const data = getCohortData();
-  let csv = "Timestamp,Name,Email,Function,Overall_Avg,Sec1_Avg,Sec2_Avg,Sec3_Avg,Day4_Activity,Valuable_Exp,Continue,Improve\n";
+  let csv = "Timestamp,Name,Email,Department,Q1,Q2,Q3,Q4,Q5,Q6,Q7,Q8,Q9,Q10,Q11,Q12,Q13,Q14,Q15,Q16,Overall_Score,Section1_Avg,Section2_Avg,Section3_Avg,Q17_Day4_Activity,Q18_Valuable_Experience,Q19_Continue_Future,Q20_Improvement_Suggestions\n";
   data.forEach(d => {
-    const o = average([...d.s1, ...d.s2, ...d.s3]).toFixed(2);
-    const s1 = average(d.s1).toFixed(2);
-    const s2 = average(d.s2).toFixed(2);
-    const s3 = average(d.s3).toFixed(2);
-    csv += `"${d.timestamp}","${d.name}","${d.email}","${d.function}",${o},${s1},${s2},${s3},"${d.q17}","${d.q18.replace(/"/g,'""')}","${d.q19.replace(/"/g,'""')}","${d.q20.replace(/"/g,'""')}"\n`;
+    const s1 = d.s1 || [];
+    const s2 = d.s2 || [];
+    const s3 = d.s3 || [];
+    const o = average([...s1, ...s2, ...s3]).toFixed(2);
+    const avgS1 = s1.length ? average(s1).toFixed(2) : "";
+    const avgS2 = s2.length ? average(s2).toFixed(2) : "";
+    const avgS3 = s3.length ? average(s3).toFixed(2) : "";
+    const q1_7 = [0,1,2,3,4,5,6].map(i => s1[i] !== undefined ? s1[i] : "").join(",");
+    const q8_12 = [0,1,2,3,4].map(i => s2[i] !== undefined ? s2[i] : "").join(",");
+    const q13_16 = [0,1,2,3].map(i => s3[i] !== undefined ? s3[i] : "").join(",");
+    const q17 = (d.q17 || '').replace(/"/g, '""');
+    const q18 = (d.q18 || '').replace(/"/g, '""');
+    const q19 = (d.q19 || '').replace(/"/g, '""');
+    const q20 = (d.q20 || '').replace(/"/g, '""');
+    csv += `"${d.timestamp || ''}","${(d.name||'').replace(/"/g,'""')}","${(d.email||'').replace(/"/g,'""')}","${(d.function||'').replace(/"/g,'""')}",${q1_7},${q8_12},${q13_16},${o},${avgS1},${avgS2},${avgS3},"${q17}","${q18}","${q19}","${q20}"\n`;
   });
 
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
