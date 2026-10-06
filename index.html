@@ -1221,28 +1221,79 @@ function syncFromGoogleSheet(isManualClick) {
           const hasContent = r.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== "");
           if (!hasContent) continue;
 
-          // Must have at least a name or an answer to qualify
-          const nameVal = String(r[colName] || '').trim();
-          const q18Val = String(r[colQ18] !== undefined && r[colQ18] !== null ? r[colQ18] : '').trim();
-          const q19Val = String(r[colQ19] !== undefined && r[colQ19] !== null ? r[colQ19] : '').trim();
-          const q20Val = String(r[colQ20] !== undefined && r[colQ20] !== null ? r[colQ20] : '').trim();
-          
-          if (!nameVal && !q18Val && !q19Val && !q20Val) continue;
+          // Check if this row has full 28-column format (r has >= 24 columns, with Q1-Q16 in cols 4..19)
+          const is28ColFormat = r.length >= 24 && !isNaN(parseFloat(r[4])) && !isNaN(parseFloat(r[19]));
 
-          // Extract ratings
-          const s1Score = parseFloat(r[5]) || 4.5;
-          const s2Score = parseFloat(r[6]) || 4.5;
-          const s3Score = parseFloat(r[7]) || 4.5;
+          let s1Arr, s2Arr, s3Arr, nameVal, emailVal, deptVal, q17Val, q18Val, q19Val, q20Val;
+
+          if (is28ColFormat) {
+            nameVal = String(r[1] || '').trim();
+            emailVal = String(r[2] || '').trim();
+            deptVal = String(r[3] || 'General').trim();
+
+            // Detailed Section 1 (Q1 to Q7: Cols 4 to 10)
+            s1Arr = [
+              parseFloat(r[4]) || 4.5,
+              parseFloat(r[5]) || 4.5,
+              parseFloat(r[6]) || 4.5,
+              parseFloat(r[7]) || 4.5,
+              parseFloat(r[8]) || 4.5,
+              parseFloat(r[9]) || 4.5,
+              parseFloat(r[10]) || 4.5
+            ];
+
+            // Detailed Section 2 (Q8 to Q12: Cols 11 to 15)
+            s2Arr = [
+              parseFloat(r[11]) || 4.5,
+              parseFloat(r[12]) || 4.5,
+              parseFloat(r[13]) || 4.5,
+              parseFloat(r[14]) || 4.5,
+              parseFloat(r[15]) || 4.5
+            ];
+
+            // Detailed Section 3 (Q13 to Q16: Cols 16 to 19)
+            s3Arr = [
+              parseFloat(r[16]) || 4.5,
+              parseFloat(r[17]) || 4.5,
+              parseFloat(r[18]) || 4.5,
+              parseFloat(r[19]) || 4.5
+            ];
+
+            q17Val = String(r[24] || "The Voyage Challenge").trim();
+            q18Val = String(r[25] || "-").trim();
+            q19Val = String(r[26] || "-").trim();
+            q20Val = String(r[27] || "-").trim();
+          } else {
+            // Legacy 12-Column format fallback
+            nameVal = String(r[colName] || '').trim();
+            emailVal = String(r[colEmail] || '').trim();
+            deptVal = String(r[colDept] || 'General').trim();
+
+            const s1Score = parseFloat(r[5]) || 4.5;
+            const s2Score = parseFloat(r[6]) || 4.5;
+            const s3Score = parseFloat(r[7]) || 4.5;
+
+            s1Arr = Array(7).fill(s1Score);
+            s2Arr = Array(5).fill(s2Score);
+            s3Arr = Array(4).fill(s3Score);
+
+            q17Val = String(r[colDay4] || "The Voyage Challenge").trim();
+            q18Val = String(r[colQ18] !== undefined && r[colQ18] !== null ? r[colQ18] : '-').trim();
+            q19Val = String(r[colQ19] !== undefined && r[colQ19] !== null ? r[colQ19] : '-').trim();
+            q20Val = String(r[colQ20] !== undefined && r[colQ20] !== null ? r[colQ20] : '-').trim();
+          }
+
+          if (!nameVal && !q18Val && !q19Val && !q20Val) continue;
 
           parsed.push({
             timestamp: r[0] ? new Date(r[0]).toLocaleString() : new Date().toLocaleString(),
             name: nameVal || 'Participant',
-            email: String(r[colEmail] || ''),
-            function: String(r[colDept] || 'General'),
-            s1: Array(7).fill(s1Score),
-            s2: Array(5).fill(s2Score),
-            s3: Array(4).fill(s3Score),
-            q17: String(r[colDay4] || "The Voyage Challenge"),
+            email: emailVal,
+            function: deptVal || 'General',
+            s1: s1Arr,
+            s2: s2Arr,
+            s3: s3Arr,
+            q17: q17Val || "The Voyage Challenge",
             q18: q18Val || "-",
             q19: q19Val || "-",
             q20: q20Val || "-"
@@ -1623,8 +1674,14 @@ function updateDashboard(){
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { position: 'right' } }
+      maintainAspectRatio: true,
+      aspectRatio: 1.5,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { boxWidth: 12, font: { size: 11 } }
+        }
+      }
     }
   });
 
@@ -1644,8 +1701,14 @@ function updateDashboard(){
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { position: 'right' } }
+      maintainAspectRatio: true,
+      aspectRatio: 1.5,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { boxWidth: 12, font: { size: 11 } }
+        }
+      }
     }
   });
 
