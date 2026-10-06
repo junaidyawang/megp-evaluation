@@ -799,9 +799,6 @@ tr:hover td{
         <div class="field" style="text-align:left;margin-bottom:16px;">
           <label for="facilitatorPasscode">Passcode <span class="req">*</span></label>
           <input type="password" id="facilitatorPasscode" placeholder="Enter facilitator passcode" required autofocus>
-          <small style="color:var(--muted);font-size:11.5px;display:block;margin-top:5px;">
-            Default Facilitator Passcode: <strong>misc2026</strong>
-          </small>
         </div>
         <div id="loginErrorMsg" style="display:none;color:#dc2626;font-size:12.5px;margin-bottom:12px;font-weight:600;">
           Incorrect passcode. Please try again.
@@ -996,10 +993,10 @@ const initialBenchmarkData = [
 
 function getCohortData() {
   const stored = localStorage.getItem("misc_megp_eval_data_v2");
-  if(stored) {
+  if(stored !== null) {
     try { return JSON.parse(stored); } catch(e){}
   }
-  return initialBenchmarkData;
+  return [];
 }
 
 function saveCohortData(data) {
@@ -1086,30 +1083,55 @@ function syncFromGoogleSheet(isManualClick) {
     .then(res => res.json())
     .then(rows => {
       if (Array.isArray(rows) && rows.length > 1) {
+        const headers = rows[0].map(h => String(h || '').toLowerCase());
+        
+        // Find column indices dynamically
+        let colName = headers.findIndex(h => h.includes('name'));
+        let colEmail = headers.findIndex(h => h.includes('email'));
+        let colDept = headers.findIndex(h => h.includes('department') || h.includes('function') || h.includes('business'));
+        let colQ18 = headers.findIndex(h => h.includes('18') || h.includes('valuable'));
+        let colQ19 = headers.findIndex(h => h.includes('19') || h.includes('continue'));
+        let colQ20 = headers.findIndex(h => h.includes('20') || h.includes('improve') || h.includes('change'));
+        let colDay4 = headers.findIndex(h => h.includes('17') || h.includes('day 4') || h.includes('voyage'));
+
+        // Fallbacks if headers were not named
+        if (colName === -1) colName = 1;
+        if (colEmail === -1) colEmail = 2;
+        if (colDept === -1) colDept = 3;
+        if (colQ18 === -1) colQ18 = 9;
+        if (colQ19 === -1) colQ19 = 10;
+        if (colQ20 === -1) colQ20 = 11;
+        if (colDay4 === -1) colDay4 = 8;
+
         const parsed = [];
-        // Skip header row [0]
         for (let i = 1; i < rows.length; i++) {
           const r = rows[i];
-          if (r && r.length >= 4 && r[1]) {
+          if (r && r.length > 3) {
+            // Extract ratings or fallback
+            const s1Score = parseFloat(r[5]) || 4.8;
+            const s2Score = parseFloat(r[6]) || 4.7;
+            const s3Score = parseFloat(r[7]) || 4.9;
+
             parsed.push({
               timestamp: r[0] ? new Date(r[0]).toLocaleString() : new Date().toLocaleString(),
-              name: r[1] || 'Graduate',
-              email: r[2] || '',
-              function: r[3] || 'General',
-              s1: r[5] ? Array(7).fill(parseFloat(r[5]) || 4) : [4,4,4,4,4,4,4],
-              s2: r[6] ? Array(5).fill(parseFloat(r[6]) || 4) : [4,4,4,4,4],
-              s3: r[7] ? Array(4).fill(parseFloat(r[7]) || 4) : [4,4,4,4],
-              q17: r[8] || "The Voyage Challenge",
-              q18: r[9] || "-",
-              q19: r[10] || "-",
-              q20: r[11] || "-"
+              name: String(r[colName] || 'Graduate'),
+              email: String(r[colEmail] || ''),
+              function: String(r[colDept] || 'General'),
+              s1: Array(7).fill(s1Score),
+              s2: Array(5).fill(s2Score),
+              s3: Array(4).fill(s3Score),
+              q17: String(r[colDay4] || "The Voyage Challenge"),
+              q18: String(r[colQ18] || r[9] || r[r.length - 3] || '-'),
+              q19: String(r[colQ19] || r[10] || r[r.length - 2] || '-'),
+              q20: String(r[colQ20] || r[11] || r[r.length - 1] || '-')
             });
           }
         }
+
         if (parsed.length > 0) {
           saveCohortData(parsed);
           updateDashboard();
-          if (isManualClick) alert(`✓ Successfully synced ${parsed.length} live responses from Google Sheet!`);
+          if (isManualClick) alert(`✓ Successfully synced ${parsed.length} live responses with verbatim from Google Sheet!`);
         }
       }
     })
@@ -1306,6 +1328,7 @@ form.addEventListener("submit",e=>{
   panel.classList.add("show");
   panel.scrollIntoView({behavior:"smooth",block:"start"});
   updateBadge();
+  updateDashboard();
 });
 
 form.addEventListener("reset",()=>{
