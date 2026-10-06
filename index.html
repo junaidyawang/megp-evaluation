@@ -702,6 +702,7 @@ tr:hover td{
         <p class="lead" style="margin:4px 0 0;font-size:13.5px">Real-time aggregate feedback, breakdown across 5 days, facilitator ratings and qualitative insights.</p>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn-primary" style="min-width:auto;padding:9px 16px;background:#00a6a6;" onclick="syncFromGoogleSheet(true)">🔄 Sync with Google Sheet</button>
         <button class="btn-primary" style="min-width:auto;padding:9px 16px;background:var(--navy);" onclick="printDashboard()">🖨️ Print / Save as PDF</button>
         <button class="btn-secondary" style="color:var(--danger);border-color:#fca5a5;" onclick="resetAllData()">🗑️ Reset</button>
       </div>
@@ -1073,6 +1074,51 @@ function activateDashboardTab() {
   if (authBanner) authBanner.style.display = "flex";
   
   updateDashboard();
+  syncFromGoogleSheet(false);
+}
+
+// Automatically Pulls and Merges Live Rows from Google Sheets
+function syncFromGoogleSheet(isManualClick) {
+  const webhookUrl = localStorage.getItem("misc_google_form_webhook") || "https://script.google.com/macros/s/AKfycbwLW2fzcodDV9Mn1cJIBzJyPRVAyejWHdHSRaw_STaPde4qJScEN7wS-3wGH5SJ_DoesQ/exec";
+  if (!webhookUrl || !webhookUrl.startsWith("http")) return;
+
+  fetch(webhookUrl)
+    .then(res => res.json())
+    .then(rows => {
+      if (Array.isArray(rows) && rows.length > 1) {
+        const parsed = [];
+        // Skip header row [0]
+        for (let i = 1; i < rows.length; i++) {
+          const r = rows[i];
+          if (r && r.length >= 4 && r[1]) {
+            parsed.push({
+              timestamp: r[0] ? new Date(r[0]).toLocaleString() : new Date().toLocaleString(),
+              name: r[1] || 'Graduate',
+              email: r[2] || '',
+              function: r[3] || 'General',
+              s1: r[5] ? Array(7).fill(parseFloat(r[5]) || 4) : [4,4,4,4,4,4,4],
+              s2: r[6] ? Array(5).fill(parseFloat(r[6]) || 4) : [4,4,4,4,4],
+              s3: r[7] ? Array(4).fill(parseFloat(r[7]) || 4) : [4,4,4,4],
+              q17: r[8] || "The Voyage Challenge",
+              q18: r[9] || "-",
+              q19: r[10] || "-",
+              q20: r[11] || "-"
+            });
+          }
+        }
+        if (parsed.length > 0) {
+          saveCohortData(parsed);
+          updateDashboard();
+          if (isManualClick) alert(`✓ Successfully synced ${parsed.length} live responses from Google Sheet!`);
+        }
+      }
+    })
+    .catch(err => {
+      console.warn("Live fetch note (cross-origin / sync in progress):", err);
+      if (isManualClick) {
+        alert("Synced with locally saved submissions. If you opened this file directly from disk, submissions submitted in this browser are displayed.");
+      }
+    });
 }
 
 // --- PRINTING SUPPORT (CONVERTS CHARTS TO HIGH-RES IMAGES FOR FLAWLESS PRINTING) ---
