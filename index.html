@@ -480,9 +480,19 @@ tr:hover td{
     box-shadow: none !important;
     padding: 12px !important;
     break-inside: avoid;
+    page-break-inside: avoid;
   }
   .chart-container {
-    height: 220px !important;
+    position: relative !important;
+    height: 250px !important;
+    width: 100% !important;
+  }
+  canvas {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   .section {
     box-shadow: none !important;
@@ -693,7 +703,6 @@ tr:hover td{
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <button class="btn-primary" style="min-width:auto;padding:9px 16px;background:var(--navy);" onclick="printDashboard()">🖨️ Print / Save as PDF</button>
-        <button class="btn-export" onclick="exportCSV()">📥 Download CSV</button>
         <button class="btn-secondary" style="color:var(--danger);border-color:#fca5a5;" onclick="resetAllData()">🗑️ Reset</button>
       </div>
     </div>
@@ -1066,7 +1075,7 @@ function activateDashboardTab() {
   updateDashboard();
 }
 
-// --- PRINTING SUPPORT ---
+// --- PRINTING SUPPORT (CONVERTS CHARTS TO HIGH-RES IMAGES FOR FLAWLESS PRINTING) ---
 function printDashboard() {
   if (!isFacilitatorAuthenticated) {
     promptFacilitatorLogin();
@@ -1075,7 +1084,52 @@ function printDashboard() {
   // Ensure dashboard tab is active and updated
   activateDashboardTab();
   document.getElementById("printDate").textContent = new Date().toLocaleString();
-  window.print();
+
+  // Convert all Chart canvas elements to static <img> tags so browser print engines render them 100% reliably
+  const canvasIds = ['sectionScoresChart', 'dailyProgressionChart', 'day4ActivityChart', 'functionDistChart'];
+  const tempImages = [];
+
+  canvasIds.forEach(id => {
+    const canvas = document.getElementById(id);
+    if (canvas) {
+      try {
+        const imgUrl = canvas.toDataURL('image/png', 1.0);
+        const printImg = document.createElement('img');
+        printImg.src = imgUrl;
+        printImg.className = 'print-only-chart';
+        printImg.style.width = '100%';
+        printImg.style.height = 'auto';
+        printImg.style.maxHeight = '240px';
+        printImg.style.objectFit = 'contain';
+        printImg.style.display = 'none';
+
+        canvas.parentNode.insertBefore(printImg, canvas.nextSibling);
+        tempImages.push({ canvas, printImg });
+      } catch (e) {
+        console.warn('Canvas export note:', e);
+      }
+    }
+  });
+
+  // Temporarily toggle display for print
+  tempImages.forEach(pair => {
+    pair.canvas.style.display = 'none';
+    pair.printImg.style.display = 'block';
+  });
+
+  // Trigger print dialog
+  setTimeout(() => {
+    window.print();
+    // Restore canvases after print dialog finishes
+    setTimeout(() => {
+      tempImages.forEach(pair => {
+        pair.canvas.style.display = 'block';
+        if (pair.printImg.parentNode) {
+          pair.printImg.parentNode.removeChild(pair.printImg);
+        }
+      });
+    }, 500);
+  }, 200);
 }
 
 // --- FORM HANDLING ---
