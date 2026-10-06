@@ -1217,7 +1217,9 @@ function syncFromGoogleSheet(isManualClick) {
 
   fetch(webhookUrl)
     .then(res => res.json())
-    .then(rows => {
+    .then(resData => {
+      // Support both {status: "success", value: rows} and direct rows array
+      let rows = Array.isArray(resData) ? resData : (resData && Array.isArray(resData.value) ? resData.value : null);
       if (Array.isArray(rows) && rows.length > 0) {
         // Detect if row 0 is a header row or already actual data
         const row0HasHeaders = rows[0].some(cell => {
@@ -1256,42 +1258,46 @@ function syncFromGoogleSheet(isManualClick) {
           const hasContent = r.some(cell => cell !== null && cell !== undefined && String(cell).trim() !== "");
           if (!hasContent) continue;
 
-          // Check if this row has full 28-column format (r has >= 24 columns, with Q1-Q16 in cols 4..19)
-          const is28ColFormat = r.length >= 24 && !isNaN(parseFloat(r[4])) && !isNaN(parseFloat(r[19]));
+          // Determine column layout
+          const is28Col = r.length >= 24;
 
           let s1Arr, s2Arr, s3Arr, nameVal, emailVal, deptVal, q17Val, q18Val, q19Val, q20Val;
 
-          if (is28ColFormat) {
+          if (is28Col) {
             nameVal = String(r[1] || '').trim();
             emailVal = String(r[2] || '').trim();
             deptVal = String(r[3] || 'General').trim();
 
+            const s1Fallback = parseFloat(r[21]) || 4.5;
+            const s2Fallback = parseFloat(r[22]) || 4.5;
+            const s3Fallback = parseFloat(r[23]) || 4.5;
+
             // Detailed Section 1 (Q1 to Q7: Cols 4 to 10)
             s1Arr = [
-              parseFloat(r[4]) || 4.5,
-              parseFloat(r[5]) || 4.5,
-              parseFloat(r[6]) || 4.5,
-              parseFloat(r[7]) || 4.5,
-              parseFloat(r[8]) || 4.5,
-              parseFloat(r[9]) || 4.5,
-              parseFloat(r[10]) || 4.5
+              parseFloat(r[4]) || s1Fallback,
+              parseFloat(r[5]) || s1Fallback,
+              parseFloat(r[6]) || s1Fallback,
+              parseFloat(r[7]) || s1Fallback,
+              parseFloat(r[8]) || s1Fallback,
+              parseFloat(r[9]) || s1Fallback,
+              parseFloat(r[10]) || s1Fallback
             ];
 
             // Detailed Section 2 (Q8 to Q12: Cols 11 to 15)
             s2Arr = [
-              parseFloat(r[11]) || 4.5,
-              parseFloat(r[12]) || 4.5,
-              parseFloat(r[13]) || 4.5,
-              parseFloat(r[14]) || 4.5,
-              parseFloat(r[15]) || 4.5
+              parseFloat(r[11]) || s2Fallback,
+              parseFloat(r[12]) || s2Fallback,
+              parseFloat(r[13]) || s2Fallback,
+              parseFloat(r[14]) || s2Fallback,
+              parseFloat(r[15]) || s2Fallback
             ];
 
             // Detailed Section 3 (Q13 to Q16: Cols 16 to 19)
             s3Arr = [
-              parseFloat(r[16]) || 4.5,
-              parseFloat(r[17]) || 4.5,
-              parseFloat(r[18]) || 4.5,
-              parseFloat(r[19]) || 4.5
+              parseFloat(r[16]) || s3Fallback,
+              parseFloat(r[17]) || s3Fallback,
+              parseFloat(r[18]) || s3Fallback,
+              parseFloat(r[19]) || s3Fallback
             ];
 
             q17Val = String(r[24] || "The Voyage Challenge").trim();
