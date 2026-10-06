@@ -542,18 +542,56 @@ tr:hover td{
   }
   .section {
     box-shadow: none !important;
-    border: 1px solid #ccc !important;
-    margin-top: 20px !important;
+    border: 1px solid #d5dfe6 !important;
+    margin-top: 18px !important;
     page-break-before: always !important;
     break-before: page !important;
+    padding: 14px 16px !important;
+    background: #fff !important;
+  }
+  #detailedRatingsSection {
+    page-break-before: always !important;
+    break-before: page !important;
+    display: block !important;
+  }
+  #detailedRatingsSection h2 {
+    font-size: 16px !important;
+    color: #082b4f !important;
+    margin: 0 0 4px !important;
+  }
+  #detailedRatingsSection h3 {
+    font-size: 12.5px !important;
+    color: #082b4f !important;
+    margin: 10px 0 6px !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+  .data-table-wrap {
+    overflow: visible !important;
+    margin-bottom: 12px !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+  table tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
   table th {
-    background: #eee !important;
-    color: #000 !important;
+    background: #082b4f !important;
+    color: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   table td, table th {
-    padding: 8px 10px !important;
-    font-size: 11px !important;
+    padding: 6px 8px !important;
+    font-size: 10.5px !important;
+    border: 1px solid #e2e8f0 !important;
   }
 }
 .print-header { display: none; }
@@ -840,10 +878,9 @@ tr:hover td{
           <table id="s1DetailTable">
             <thead>
               <tr>
-                <th style="width:8%;text-align:center;">No.</th>
-                <th style="width:58%;">Evaluation Question Item</th>
-                <th style="width:17%;text-align:center;">Mean Rating (/5.0)</th>
-                <th style="width:17%;text-align:center;">Satisfaction</th>
+                <th style="width:10%;text-align:center;">No.</th>
+                <th style="width:68%;">Evaluation Question Item</th>
+                <th style="width:22%;text-align:center;">Mean Rating (/5.0)</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -857,10 +894,9 @@ tr:hover td{
           <table id="s2DetailTable">
             <thead>
               <tr>
-                <th style="width:8%;text-align:center;">No.</th>
-                <th style="width:58%;">Evaluation Question Item</th>
-                <th style="width:17%;text-align:center;">Mean Rating (/5.0)</th>
-                <th style="width:17%;text-align:center;">Satisfaction</th>
+                <th style="width:10%;text-align:center;">No.</th>
+                <th style="width:68%;">Evaluation Question Item</th>
+                <th style="width:22%;text-align:center;">Mean Rating (/5.0)</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -874,10 +910,9 @@ tr:hover td{
           <table id="s3DetailTable">
             <thead>
               <tr>
-                <th style="width:8%;text-align:center;">No.</th>
-                <th style="width:58%;">Evaluation Question Item</th>
-                <th style="width:17%;text-align:center;">Mean Rating (/5.0)</th>
-                <th style="width:17%;text-align:center;">Satisfaction</th>
+                <th style="width:10%;text-align:center;">No.</th>
+                <th style="width:68%;">Evaluation Question Item</th>
+                <th style="width:22%;text-align:center;">Mean Rating (/5.0)</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -1405,8 +1440,16 @@ function average(vals){
   if(!vals || !vals.length) return 0;
   return vals.reduce((a,b)=>a+b,0)/vals.length;
 }
-function sectionValues(id){
-  return [...form.querySelectorAll(`input[data-section="${id}"]:checked`)].map(x=>Number(x.value));
+function getSectionValues(id){
+  const start = startNums[id];
+  const count = sections[id].length;
+  const res = [];
+  for(let i=0; i<count; i++){
+    const qn = start + i;
+    const checked = form.querySelector(`input[name="q${qn}"]:checked`);
+    res.push(checked ? Number(checked.value) : 0);
+  }
+  return res;
 }
 
 form.addEventListener("submit",e=>{
@@ -1418,7 +1461,7 @@ form.addEventListener("submit",e=>{
   }
   errorBox.classList.remove("show");
 
-  const s1=sectionValues("s1"), s2=sectionValues("s2"), s3=sectionValues("s3");
+  const s1=getSectionValues("s1"), s2=getSectionValues("s2"), s3=getSectionValues("s3");
   const all=[...s1,...s2,...s3];
 
   const participantName = form.elements["participantName"].value.trim();
@@ -1472,6 +1515,10 @@ form.addEventListener("submit",e=>{
       s1: s1,
       s2: s2,
       s3: s3,
+      // Also provide flat keys q1..q16 for maximum Apps Script parser compatibility
+      q1: s1[0], q2: s1[1], q3: s1[2], q4: s1[3], q5: s1[4], q6: s1[5], q7: s1[6],
+      q8: s2[0], q9: s2[1], q10: s2[2], q11: s2[3], q12: s2[4],
+      q13: s3[0], q14: s3[1], q15: s3[2], q16: s3[3],
       overallScore: avgOverall.toFixed(2),
       s1Score: avgS1.toFixed(2),
       s2Score: avgS2.toFixed(2),
@@ -1775,9 +1822,6 @@ function populateQuestionBreakdown(secKey, tableId, questionsArr, startQNum, dat
         <span style="font-size:14px;font-weight:800;color:${badgeClass};background:#f0f6fa;padding:4px 10px;border-radius:6px;display:inline-block;">
           ${scoresForQ.length > 0 ? meanQ.toFixed(2) : '-'} / 5.0
         </span>
-      </td>
-      <td style="text-align:center;font-weight:700;color:${satPct >= 80 ? 'var(--success)' : 'var(--navy)'};vertical-align:middle;">
-        ${scoresForQ.length > 0 ? satPct + '%' : '-'}
       </td>
     `;
     tbody.appendChild(tr);
