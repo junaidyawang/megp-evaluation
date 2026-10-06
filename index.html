@@ -526,14 +526,16 @@ tr:hover td{
     width: 100% !important;
     box-sizing: border-box !important;
   }
-  canvas {
-    max-width: 100% !important;
+  .print-chart-img {
+    width: 100% !important;
+    height: 185px !important;
     max-height: 185px !important;
+    object-fit: contain !important;
     display: block !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+    margin: 0 auto !important;
   }
-    print-color-adjust: exact !important;
+  canvas {
+    display: none !important;
   }
   .section {
     box-shadow: none !important;
@@ -815,6 +817,65 @@ tr:hover td{
             <!-- Populated dynamically -->
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- Detailed Overall Rating Breakdown by Question (Sections 1 to 3) -->
+    <div class="section" style="margin-top:24px" id="detailedRatingsSection">
+      <h2>Detailed Overall Rating Breakdown by Question</h2>
+      <p class="section-desc">Mean cohort score, satisfaction level, and rating distribution for each individual question across Sections 1 to 3.</p>
+
+      <div style="margin-top:16px;">
+        <h3 style="color:var(--navy);font-size:15px;margin:0 0 8px;display:flex;align-items:center;gap:8px;">
+          <span>📋</span> Section 1: Overall Programme Experience (Q1 to Q7)
+        </h3>
+        <div class="data-table-wrap" style="margin-bottom:20px;">
+          <table id="s1DetailTable">
+            <thead>
+              <tr>
+                <th style="width:8%;text-align:center;">No.</th>
+                <th style="width:58%;">Evaluation Question Item</th>
+                <th style="width:17%;text-align:center;">Mean Rating (/5.0)</th>
+                <th style="width:17%;text-align:center;">Satisfaction</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <h3 style="color:var(--navy);font-size:15px;margin:0 0 8px;display:flex;align-items:center;gap:8px;">
+          <span>🗓️</span> Section 2: Experience Across Five Days (Q8 to Q12)
+        </h3>
+        <div class="data-table-wrap" style="margin-bottom:20px;">
+          <table id="s2DetailTable">
+            <thead>
+              <tr>
+                <th style="width:8%;text-align:center;">No.</th>
+                <th style="width:58%;">Evaluation Question Item</th>
+                <th style="width:17%;text-align:center;">Mean Rating (/5.0)</th>
+                <th style="width:17%;text-align:center;">Satisfaction</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <h3 style="color:var(--navy);font-size:15px;margin:0 0 8px;display:flex;align-items:center;gap:8px;">
+          <span>🎤</span> Section 3: Facilitators &amp; Speakers (Q13 to Q16)
+        </h3>
+        <div class="data-table-wrap">
+          <table id="s3DetailTable">
+            <thead>
+              <tr>
+                <th style="width:8%;text-align:center;">No.</th>
+                <th style="width:58%;">Evaluation Question Item</th>
+                <th style="width:17%;text-align:center;">Mean Rating (/5.0)</th>
+                <th style="width:17%;text-align:center;">Satisfaction</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </main>
@@ -1197,6 +1258,42 @@ function syncFromGoogleSheet(isManualClick) {
 }
 
 // --- PRINTING SUPPORT (CONVERTS CHARTS TO HIGH-RES IMAGES FOR FLAWLESS PRINTING) ---
+function prepareChartsForPrint() {
+  const chartConfigs = [
+    { id: 'sectionScoresChart', inst: sectionChartInst },
+    { id: 'dailyProgressionChart', inst: dailyChartInst },
+    { id: 'day4ActivityChart', inst: day4ChartInst },
+    { id: 'functionDistChart', inst: functionChartInst }
+  ];
+
+  chartConfigs.forEach(item => {
+    const canvas = document.getElementById(item.id);
+    if (!canvas) return;
+    
+    // Remove any previous print image
+    const existingImg = canvas.parentNode.querySelector('.print-chart-img');
+    if (existingImg) existingImg.remove();
+
+    try {
+      const dataUrl = canvas.toDataURL('image/png', 1.0);
+      const img = document.createElement('img');
+      img.src = dataUrl;
+      img.className = 'print-chart-img';
+      img.alt = 'Chart Visual';
+      canvas.parentNode.appendChild(img);
+    } catch(e) {
+      console.warn("Chart image export:", e);
+    }
+  });
+}
+
+function cleanupChartsAfterPrint() {
+  document.querySelectorAll('.print-chart-img').forEach(img => img.remove());
+}
+
+window.addEventListener('beforeprint', prepareChartsForPrint);
+window.addEventListener('afterprint', cleanupChartsAfterPrint);
+
 function printDashboard() {
   if (!isFacilitatorAuthenticated) {
     promptFacilitatorLogin();
@@ -1205,7 +1302,7 @@ function printDashboard() {
   activateDashboardTab();
   document.getElementById("printDate").textContent = new Date().toLocaleString();
 
-  // Ensure all charts are drawn immediately without animation delays
+  // Force synchronous redraw
   [sectionChartInst, dailyChartInst, day4ChartInst, functionChartInst].forEach(chart => {
     if (chart) {
       chart.resize();
@@ -1213,9 +1310,12 @@ function printDashboard() {
     }
   });
 
+  // Convert charts to images before launching print
+  prepareChartsForPrint();
+
   setTimeout(() => {
     window.print();
-  }, 100);
+  }, 150);
 }
 
 // --- FORM HANDLING ---
@@ -1566,6 +1666,53 @@ function updateDashboard(){
       <td style="font-size:13px;line-height:1.55;color:var(--text);vertical-align:top;">${escapeHtml(row.q18 || '-')}</td>
       <td style="font-size:13px;line-height:1.55;color:var(--text);vertical-align:top;">${escapeHtml(row.q19 || '-')}</td>
       <td style="font-size:13px;line-height:1.55;color:var(--text);vertical-align:top;">${escapeHtml(row.q20 || '-')}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Populate Detailed Question Breakdowns for Section 1, 2, and 3
+  populateQuestionBreakdown("s1", "s1DetailTable", sections.s1, startNums.s1, data);
+  populateQuestionBreakdown("s2", "s2DetailTable", sections.s2, startNums.s2, data);
+  populateQuestionBreakdown("s3", "s3DetailTable", sections.s3, startNums.s3, data);
+}
+
+function populateQuestionBreakdown(secKey, tableId, questionsArr, startQNum, data) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  const tbody = table.querySelector("tbody");
+  tbody.innerHTML = "";
+
+  questionsArr.forEach((qText, qIdx) => {
+    const qNum = startQNum + qIdx;
+    let scoresForQ = [];
+
+    data.forEach(item => {
+      if (item[secKey] && item[secKey][qIdx] !== undefined) {
+        scoresForQ.push(Number(item[secKey][qIdx]));
+      }
+    });
+
+    const meanQ = scoresForQ.length > 0 ? average(scoresForQ) : 0;
+    const satisfiedCount = scoresForQ.filter(s => s >= 4.0).length;
+    const satPct = scoresForQ.length > 0 ? Math.round((satisfiedCount / scoresForQ.length) * 100) : 0;
+
+    let badgeClass = "#00a6a6";
+    if (meanQ >= 4.5) badgeClass = "#166534";
+    else if (meanQ >= 3.8) badgeClass = "#082b4f";
+    else if (meanQ > 0) badgeClass = "#b45309";
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td style="text-align:center;font-weight:700;color:var(--navy);vertical-align:middle;">Q${qNum}</td>
+      <td style="font-size:13px;line-height:1.45;color:var(--text);vertical-align:middle;">${escapeHtml(qText)}</td>
+      <td style="text-align:center;vertical-align:middle;">
+        <span style="font-size:14px;font-weight:800;color:${badgeClass};background:#f0f6fa;padding:4px 10px;border-radius:6px;display:inline-block;">
+          ${scoresForQ.length > 0 ? meanQ.toFixed(2) : '-'} / 5.0
+        </span>
+      </td>
+      <td style="text-align:center;font-weight:700;color:${satPct >= 80 ? 'var(--success)' : 'var(--navy)'};vertical-align:middle;">
+        ${scoresForQ.length > 0 ? satPct + '%' : '-'}
+      </td>
     `;
     tbody.appendChild(tr);
   });
