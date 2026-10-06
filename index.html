@@ -318,6 +318,9 @@ button{
   height:260px;
   width:100%;
 }
+.print-chart-img{
+  display:none;
+}
 .full-width-card{
   grid-column:1/-1;
 }
@@ -776,24 +779,28 @@ tr:hover td{
           <h3>Section Score Benchmarks <span style="font-size:12px;color:var(--muted);font-weight:normal">Avg / 5.0</span></h3>
           <div class="chart-container">
             <canvas id="sectionScoresChart"></canvas>
+            <img class="print-chart-img" id="sectionScoresChartPrintImg" alt="Section Score Benchmarks Chart">
           </div>
         </div>
         <div class="chart-card">
           <h3>Day 1 - Day 5 Daily Evaluation Journey</h3>
           <div class="chart-container">
             <canvas id="dailyProgressionChart"></canvas>
+            <img class="print-chart-img" id="dailyProgressionChartPrintImg" alt="Daily Evaluation Journey Chart">
           </div>
         </div>
         <div class="chart-card">
           <h3>Day 4 Most Valued Activity Votes</h3>
           <div class="chart-container">
             <canvas id="day4ActivityChart"></canvas>
+            <img class="print-chart-img" id="day4ActivityChartPrintImg" alt="Day 4 Most Valued Activity Votes Chart">
           </div>
         </div>
         <div class="chart-card">
           <h3>Submissions by Department</h3>
           <div class="chart-container">
             <canvas id="functionDistChart"></canvas>
+            <img class="print-chart-img" id="functionDistChartPrintImg" alt="Submissions by Department Chart">
           </div>
         </div>
       </div>
@@ -1258,41 +1265,31 @@ function syncFromGoogleSheet(isManualClick) {
 }
 
 // --- PRINTING SUPPORT (CONVERTS CHARTS TO HIGH-RES IMAGES FOR FLAWLESS PRINTING) ---
-function prepareChartsForPrint() {
+function updatePrintChartImages() {
   const chartConfigs = [
-    { id: 'sectionScoresChart', inst: sectionChartInst },
-    { id: 'dailyProgressionChart', inst: dailyChartInst },
-    { id: 'day4ActivityChart', inst: day4ChartInst },
-    { id: 'functionDistChart', inst: functionChartInst }
+    { canvasId: 'sectionScoresChart', imgId: 'sectionScoresChartPrintImg', inst: sectionChartInst },
+    { canvasId: 'dailyProgressionChart', imgId: 'dailyProgressionChartPrintImg', inst: dailyChartInst },
+    { canvasId: 'day4ActivityChart', imgId: 'day4ActivityChartPrintImg', inst: day4ChartInst },
+    { canvasId: 'functionDistChart', imgId: 'functionDistChartPrintImg', inst: functionChartInst }
   ];
 
   chartConfigs.forEach(item => {
-    const canvas = document.getElementById(item.id);
-    if (!canvas) return;
-    
-    // Remove any previous print image
-    const existingImg = canvas.parentNode.querySelector('.print-chart-img');
-    if (existingImg) existingImg.remove();
-
+    const img = document.getElementById(item.imgId);
+    if (!img) return;
     try {
-      const dataUrl = canvas.toDataURL('image/png', 1.0);
-      const img = document.createElement('img');
-      img.src = dataUrl;
-      img.className = 'print-chart-img';
-      img.alt = 'Chart Visual';
-      canvas.parentNode.appendChild(img);
+      if (item.inst && typeof item.inst.toBase64Image === 'function') {
+        img.src = item.inst.toBase64Image();
+      } else {
+        const canvas = document.getElementById(item.canvasId);
+        if (canvas) img.src = canvas.toDataURL('image/png', 1.0);
+      }
     } catch(e) {
-      console.warn("Chart image export:", e);
+      console.warn("Chart image export error:", e);
     }
   });
 }
 
-function cleanupChartsAfterPrint() {
-  document.querySelectorAll('.print-chart-img').forEach(img => img.remove());
-}
-
-window.addEventListener('beforeprint', prepareChartsForPrint);
-window.addEventListener('afterprint', cleanupChartsAfterPrint);
+window.addEventListener('beforeprint', updatePrintChartImages);
 
 function printDashboard() {
   if (!isFacilitatorAuthenticated) {
@@ -1311,11 +1308,11 @@ function printDashboard() {
   });
 
   // Convert charts to images before launching print
-  prepareChartsForPrint();
+  updatePrintChartImages();
 
   setTimeout(() => {
     window.print();
-  }, 150);
+  }, 200);
 }
 
 // --- FORM HANDLING ---
@@ -1674,6 +1671,9 @@ function updateDashboard(){
   populateQuestionBreakdown("s1", "s1DetailTable", sections.s1, startNums.s1, data);
   populateQuestionBreakdown("s2", "s2DetailTable", sections.s2, startNums.s2, data);
   populateQuestionBreakdown("s3", "s3DetailTable", sections.s3, startNums.s3, data);
+
+  // Keep print chart images pre-rendered and synchronized
+  setTimeout(updatePrintChartImages, 100);
 }
 
 function populateQuestionBreakdown(secKey, tableId, questionsArr, startQNum, data) {
