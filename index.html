@@ -447,88 +447,101 @@ tr:hover td{
   #tab-survey {
     display: none !important;
   }
+  @page {
+    size: A4 portrait;
+    margin: 12mm 10mm;
+  }
   .print-header {
     display: block !important;
-    margin-bottom: 12px;
-    border-bottom: 2px solid #082b4f;
-    padding-bottom: 8px;
+    margin-bottom: 12px !important;
+    border-bottom: 2px solid #082b4f !important;
+    padding-bottom: 6px !important;
   }
   .print-header h1 {
-    font-size: 20px;
-    color: #082b4f;
-    margin: 0 0 2px;
+    font-size: 19px !important;
+    color: #082b4f !important;
+    margin: 0 0 2px !important;
   }
   .dashboard-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 8px !important;
-    margin-top: 8px !important;
-    margin-bottom: 12px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 10px !important;
+    margin: 8px 0 12px 0 !important;
   }
   .stat-card {
-    border: 1px solid #ddd !important;
+    flex: 1 1 0 !important;
+    border: 1px solid #d5dfe6 !important;
+    border-radius: 8px !important;
     box-shadow: none !important;
-    padding: 8px 12px !important;
-    break-inside: avoid;
+    padding: 8px 10px !important;
+    background: #fff !important;
   }
   .stat-card .value {
-    font-size: 24px !important;
+    font-size: 22px !important;
     margin-top: 2px !important;
+    color: #082b4f !important;
   }
   .stat-card .label {
-    font-size: 10px !important;
+    font-size: 9.5px !important;
   }
   .stat-card .trend {
-    font-size: 10px !important;
+    font-size: 9.5px !important;
     margin-top: 2px !important;
   }
   .charts-wrapper {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    display: block !important;
+    width: 100% !important;
   }
   .charts-grid {
     display: grid !important;
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 10px !important;
-    margin-top: 8px !important;
+    width: 100% !important;
+    margin: 0 !important;
   }
   .chart-card {
-    border: 1px solid #e0e0e0 !important;
+    border: 1px solid #d5dfe6 !important;
+    border-radius: 8px !important;
     box-shadow: none !important;
     padding: 8px 10px !important;
-    break-inside: avoid !important;
     page-break-inside: avoid !important;
+    break-inside: avoid !important;
     background: #fff !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
   }
   .chart-card h3 {
-    font-size: 12px !important;
+    font-size: 11px !important;
     margin: 0 0 6px !important;
+    color: #082b4f !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
   .chart-container {
     position: relative !important;
-    height: 180px !important;
+    height: 190px !important;
     width: 100% !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
   }
   .print-only-chart {
-    max-height: 175px !important;
     width: 100% !important;
+    height: 190px !important;
+    max-height: 190px !important;
     object-fit: contain !important;
     display: block !important;
     margin: 0 auto !important;
   }
   canvas {
-    max-width: 100% !important;
-    height: auto !important;
-    display: block !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+    display: none !important;
   }
   .section {
     box-shadow: none !important;
     border: 1px solid #ccc !important;
-    margin-top: 18px !important;
+    margin-top: 20px !important;
     page-break-before: always !important;
     break-before: page !important;
   }
@@ -725,7 +738,7 @@ tr:hover td{
       <button class="btn-secondary" style="padding:6px 14px;font-size:12px;" onclick="facilitatorLogout()">Log Out</button>
     </div>
 
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+    <div class="no-print" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
       <div>
         <div class="eyebrow" style="margin-bottom:4px">Executive Analytics &amp; Reports</div>
         <h1 style="margin:0;font-size:26px">MEGP Evaluation Dashboard</h1>
@@ -1209,8 +1222,8 @@ function printDashboard() {
         printImg.src = imgUrl;
         printImg.className = 'print-only-chart';
         printImg.style.width = '100%';
-        printImg.style.height = 'auto';
-        printImg.style.maxHeight = '175px';
+        printImg.style.height = '190px';
+        printImg.style.maxHeight = '190px';
         printImg.style.objectFit = 'contain';
         printImg.style.display = 'none';
 
