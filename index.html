@@ -522,12 +522,8 @@ tr:hover td{
       <button class="nav-tab-btn" onclick="switchTab('dashboard')">
         🔒 Analytics Dashboard <span class="badge-count" id="responseBadge">4</span>
       </button>
-      <label class="nav-tab-btn" style="cursor:pointer;background:#00a6a6;color:#fff;font-weight:700;">
-        📂 Load Google Sheet CSV
-        <input type="file" id="navCsvInput" accept=".csv" style="display:none;" onchange="importCSVFile(event)">
-      </label>
-      <button class="nav-tab-btn" onclick="openLinkModal()">
-        🔗 Link Info
+      <button class="nav-tab-btn" style="cursor:pointer;background:#00a6a6;color:#fff;font-weight:700;" onclick="exportCSV()">
+        📥 Download CSV File
       </button>
     </div>
   </header>
@@ -696,13 +692,9 @@ tr:hover td{
         <p class="lead" style="margin:4px 0 0;font-size:13.5px">Real-time aggregate feedback, breakdown across 5 days, facilitator ratings and qualitative insights.</p>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-        <label class="btn-primary" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin:0;background:#0f766e;color:#fff;box-shadow:0 3px 10px rgba(15,118,110,0.25);">
-          📂 Load Google Sheet CSV
-          <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="importCSVFile(event)">
-        </label>
         <button class="btn-primary" style="min-width:auto;padding:9px 16px;background:var(--navy);" onclick="printDashboard()">🖨️ Print / Save as PDF</button>
-        <button class="btn-export" onclick="exportCSV()">📥 Export CSV</button>
-        <button class="btn-secondary" onclick="resetToSampleData()">🔄 Reset Data</button>
+        <button class="btn-export" onclick="exportCSV()">📥 Download CSV</button>
+        <button class="btn-secondary" onclick="resetToSampleData()">🔄 Reset Sample Data</button>
       </div>
     </div>
 
@@ -765,21 +757,15 @@ tr:hover td{
     <!-- Qualitative Insights & Submissions Table -->
     <div class="section" style="margin-top:24px">
       <h2>Recent Participant Submissions &amp; Qualitative Feedback</h2>
-      <p class="section-desc">Review individual submissions, Day 4 highlights, and suggestions for future MEGP cohorts.</p>
+      <p class="section-desc">Review participant reflections, key highlights, and constructive feedback for future cohorts.</p>
       
       <div class="data-table-wrap">
         <table id="responsesTable">
           <thead>
             <tr>
-              <th>Timestamp</th>
-              <th>Participant</th>
-              <th>Department</th>
-              <th>Overall</th>
-              <th>Sec 1</th>
-              <th>Sec 2</th>
-              <th>Sec 3</th>
-              <th>Top Day 4 Activity</th>
-              <th>Continue in Future</th>
+              <th style="width:34%;">Question 18: Most Valuable Experience</th>
+              <th style="width:33%;">Question 19: Continue in Future</th>
+              <th style="width:33%;">Question 20: Areas for Improvement</th>
             </tr>
           </thead>
           <tbody>
@@ -1381,15 +1367,9 @@ function updateDashboard(){
     const avgAll = average([...row.s1, ...row.s2, ...row.s3]).toFixed(2);
 
     tr.innerHTML = `
-      <td><small style="color:var(--muted)">${row.timestamp || '-'}</small></td>
-      <td><strong>${escapeHtml(row.name)}</strong><br><small style="color:var(--muted)">${escapeHtml(row.email)}</small></td>
-      <td><span class="tag">${escapeHtml(row.function)}</span></td>
-      <td><strong style="color:var(--navy);font-size:14px">${avgAll}</strong></td>
-      <td>${avgS1}</td>
-      <td>${avgS2}</td>
-      <td>${avgS3}</td>
-      <td><span style="font-weight:600;color:var(--blue)">${escapeHtml(row.q17 || '-')}</span></td>
-      <td style="max-width:240px;color:var(--muted);font-size:12px;line-height:1.4">${escapeHtml(row.q19 || '-')}</td>
+      <td style="font-size:13px;line-height:1.55;color:var(--text);vertical-align:top;">${escapeHtml(row.q18 || '-')}</td>
+      <td style="font-size:13px;line-height:1.55;color:var(--text);vertical-align:top;">${escapeHtml(row.q19 || '-')}</td>
+      <td style="font-size:13px;line-height:1.55;color:var(--text);vertical-align:top;">${escapeHtml(row.q20 || '-')}</td>
     `;
     tbody.appendChild(tr);
   });
