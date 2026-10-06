@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MISC Executive Graduate Programme | Evaluation & Analytics Dashboard</title>
+<!-- Chart.js for visualizations -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --navy:#082b4f;
+  --blue:#0d4f80;
+  --teal:#00a6a6;
+  --aqua:#e8f7f8;
+  --light:#f4f7f9;
+  --line:#d9e2e8;
+  --text:#173042;
+  --muted:#687a89;
+  --white:#ffffff;
+  --success:#137a57;
+  --danger:#dc2626;
+  --warning:#d97706;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  background:linear-gradient(180deg,#eef6f8 0%,#f7f9fb 35%,#f7f9fb 100%);
+  color:var(--text);
+  min-height:100vh;
+}
+.app-container{max-width:1160px;margin:0 auto;padding:16px 18px 80px}
+
+/* Top App Bar & Navigation */
+.nav-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:var(--white);
+  padding:14px 22px;
+  border-radius:18px;
+  box-shadow:0 4px 18px rgba(8,43,79,.05);
+  border:1px solid #e2e8ec;
+  margin-bottom:20px;
+}
+.brand-group{
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+.brand-group img{
+  width:95px;
+  height:auto;
+  display:block;
+}
+.brand-title{
+  font-size:17px;
+  font-weight:800;
+  color:var(--navy);
+  letter-spacing:-0.02em;
+}
+.brand-sub{
+  font-size:12px;
+  color:var(--muted);
+  font-weight:500;
+}
+.nav-tabs{
+  display:flex;
+  gap:8px;
+  background:#f0f4f7;
+  padding:5px;
+  border-radius:12px;
+}
+.nav-tab-btn{
+  border:none;
+  background:transparent;
+  padding:9px 18px;
+  border-radius:9px;
+  font-weight:600;
+  font-size:13.5px;
+  color:var(--muted);
+  cursor:pointer;
+  transition:all .2s ease;
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+.nav-tab-btn.active{
+  background:var(--white);
+  color:var(--navy);
+  box-shadow:0 3px 10px rgba(8,43,79,.09);
+}
+.badge-count{
+  background:var(--teal);
+  color:#fff;
+  font-size:10px;
+  padding:2px 7px;
+  border-radius:999px;
+  font-weight:700;
+}
+
+/* Tab Panels */
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* Header & Banner */
+.hero{
+  background:transparent;
+  padding:4px 0 14px;
+  position:relative;
+}
+.eyebrow{
+  font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-bottom:10px
+}
+h1{font-size:29px;line-height:1.2;margin:0 0 10px;color:var(--navy)}
+.lead{max-width:750px;color:var(--muted);line-height:1.6;margin:0 0 10px;font-size:14.5px}
+.scale-note{
+  background:var(--aqua);
+  border:1px solid #bfe7e7;
+  border-radius:14px;
+  padding:12px 16px;
+  font-size:13.5px;
+}
+.scale-note strong{color:var(--navy)}
+.progress-wrap{margin:18px 0 6px}
+.progress-track{height:8px;border-radius:999px;background:#dfe8ed;overflow:hidden}
+.progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--blue));transition:.25s}
+.progress-label{margin-top:7px;font-size:12px;color:var(--muted);text-align:right}
+
+/* Form Sections */
+.section{
+  margin-top:20px;background:var(--white);border-radius:18px;padding:24px 26px;
+  box-shadow:0 6px 22px rgba(8,43,79,.05);border:1px solid #edf1f4;
+}
+.section h2{font-size:19px;margin:0;color:var(--navy);display:flex;align-items:center;justify-content:space-between}
+.section-desc{margin:7px 0 20px;color:var(--muted);font-size:13.5px;line-height:1.55}
+.q{
+  padding:18px 0;border-top:1px solid #edf1f4
+}
+.q:first-of-type{border-top:0;padding-top:4px}
+.q-text{font-size:15px;line-height:1.5;font-weight:600;margin-bottom:12px}
+.q-num{display:inline-flex;width:24px;height:24px;border-radius:50%;align-items:center;justify-content:center;background:#edf6f7;color:var(--blue);font-size:12px;margin-right:8px}
+.likert{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:8px
+}
+.likert input{display:none}
+.likert label{
+  border:1px solid var(--line);border-radius:12px;padding:10px 6px;text-align:center;cursor:pointer;
+  transition:.18s;background:#fff;min-height:66px;display:flex;flex-direction:column;justify-content:center
+}
+.likert label:hover{border-color:var(--teal);transform:translateY(-1px)}
+.likert .score{font-size:18px;font-weight:800;color:var(--navy)}
+.likert .meaning{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.2}
+.likert input:checked + label{
+  background:var(--navy);border-color:var(--navy);box-shadow:0 4px 12px rgba(8,43,79,.18)
+}
+.likert input:checked + label .score,.likert input:checked + label .meaning{color:white}
+.choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.choice-grid label{
+  display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;background:#fff;font-size:14px
+}
+.choice-grid label:hover{border-color:var(--teal);background:#fbfefe}
+textarea{
+  width:100%;min-height:100px;border:1px solid var(--line);border-radius:12px;padding:13px 14px;
+  font:inherit;resize:vertical;outline:none;background:#fcfdfe;font-size:14px
+}
+textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,166,166,.08)}
+.demographic-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+.field label{
+  display:block;
+  font-size:13px;
+  font-weight:700;
+  color:var(--navy);
+  margin-bottom:7px;
+}
+.field input,
+.field select{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:12px 14px;
+  font:inherit;
+  color:var(--text);
+  background:#fcfdfe;
+  outline:none;
+}
+.field input:focus,
+.field select:focus{
+  border-color:var(--teal);
+  box-shadow:0 0 0 3px rgba(0,166,166,.08);
+}
+.req{color:#a33}
+.actions{margin-top:22px;display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap}
+button{
+  border:0;border-radius:12px;padding:12px 20px;font:inherit;font-weight:700;cursor:pointer;transition:.2s
+}
+.btn-secondary{background:#e9eef2;color:var(--navy)}
+.btn-primary{background:linear-gradient(90deg,var(--blue),var(--teal));color:#fff;min-width:170px}
+.btn-primary:hover{opacity:.95;transform:translateY(-1px)}
+.btn-export{background:#edf6f7;color:var(--blue);border:1px solid #bce1e4;font-size:13px;padding:8px 14px;border-radius:9px}
+.btn-export:hover{background:#dcf1f3}
+.note{font-size:12px;color:var(--muted);margin-top:12px}
+
+/* Results section */
+.result{
+  display:none;margin-top:22px;background:var(--white);border-radius:18px;padding:26px 28px;
+  box-shadow:0 6px 22px rgba(8,43,79,.06);border:1px solid #dbe8ea
+}
+.result.show{display:block}
+.result h2{margin:0 0 6px;color:var(--navy)}
+.overall{
+  display:flex;align-items:end;gap:12px;padding:16px 18px;border-radius:14px;background:var(--aqua);margin:16px 0
+}
+.overall-score{font-size:42px;font-weight:850;color:var(--navy);line-height:1}
+.overall small{color:var(--muted)}
+.score-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.score-card{border:1px solid var(--line);border-radius:14px;padding:15px;background:#fff}
+.score-card .sname{font-size:12px;color:var(--muted);line-height:1.35}
+.score-card .sval{font-size:26px;font-weight:800;color:var(--blue);margin-top:8px}
+.error{
+  display:none;margin-top:16px;padding:12px 15px;border-radius:12px;background:#fff0f0;color:#a33;border:1px solid #ffd0d0;font-size:13.5px
+}
+.error.show{display:block}
+
+/* Integration Config Drawer / Card */
+.integration-card{
+  background:#f9fbfd;
+  border:1px dashed #b7cddb;
+  border-radius:14px;
+  padding:16px 20px;
+  margin-top:16px;
+}
+.integration-card h3{
+  font-size:14px;
+  margin:0 0 6px;
+  color:var(--blue);
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.integration-card p{
+  font-size:12.5px;
+  margin:0 0 10px;
+  color:var(--muted);
+}
+.integration-input-group{
+  display:flex;
+  gap:10px;
+}
+.integration-input-group input{
+  flex:1;
+  font-size:12.5px;
+  padding:9px 12px;
+  border-radius:8px;
+  border:1px solid var(--line);
+}
+
+/* Dashboard Specific Styles */
+.dashboard-grid{
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:16px;
+  margin-top:20px;
+}
+.stat-card{
+  background:var(--white);
+  border-radius:16px;
+  padding:20px;
+  border:1px solid #edf1f4;
+  box-shadow:0 4px 18px rgba(8,43,79,.04);
+}
+.stat-card .label{
+  font-size:12px;
+  color:var(--muted);
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+.stat-card .value{
+  font-size:32px;
+  font-weight:850;
+  color:var(--navy);
+  margin-top:6px;
+}
+.stat-card .trend{
+  font-size:11.5px;
+  margin-top:6px;
+  color:var(--teal);
+  font-weight:600;
+}
+.charts-grid{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:20px;
+  margin-top:22px;
+}
+.chart-card{
+  background:var(--white);
+  border-radius:18px;
+  padding:22px;
+  border:1px solid #edf1f4;
+  box-shadow:0 4px 18px rgba(8,43,79,.04);
+}
+.chart-card h3{
+  margin:0 0 14px;
+  font-size:16px;
+  color:var(--navy);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.chart-container{
+  position:relative;
+  height:260px;
+  width:100%;
+}
+.full-width-card{
+  grid-column:1/-1;
+}
+.data-table-wrap{
+  overflow-x:auto;
+  margin-top:14px;
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+  text-align:left;
+}
+th{
+  background:#f4f8fb;
+  padding:12px 14px;
+  font-weight:700;
+  color:var(--navy);
+  border-bottom:2px solid var(--line);
+}
+td{
+  padding:12px 14px;
+  border-bottom:1px solid #edf1f4;
+  color:var(--text);
+}
+tr:hover td{
+  background:#fafcfe;
+}
+.tag{
+  display:inline-block;
+  padding:3px 9px;
+  border-radius:6px;
+  font-size:11.5px;
+  font-weight:600;
+  background:#edf6f7;
+  color:var(--blue);
+}
+
+/* Modal for Google Form Linking Guide */
+.modal-overlay{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(8,43,79,.45);
+  backdrop-filter:blur(3px);
+  z-index:999;
+  align-items:center;
+  justify-content:center;
+}
+.modal-overlay.open{
+  display:flex;
+}
+.modal-box{
+  background:#fff;
+  border-radius:20px;
+  width:90%;
+  max-width:680px;
+  max-height:88vh;
+  overflow-y:auto;
+  padding:28px;
+  box-shadow:0 12px 40px rgba(0,0,0,.18);
+}
+.modal-box h2{
+  margin:0 0 12px;
+  color:var(--navy);
+  font-size:21px;
+}
+.step-list{
+  padding-left:20px;
+  margin:16px 0;
+  color:var(--text);
+  font-size:14px;
+  line-height:1.65;
+}
+.step-list li{margin-bottom:12px}
+.code-snip{
+  background:#1a2332;
+  color:#a5d6a7;
+  padding:12px 16px;
+  border-radius:10px;
+  font-family:Consolas,monospace;
+  font-size:12px;
+  overflow-x:auto;
+  margin:8px 0;
+}
+
+@media(max-width:880px){
+  .dashboard-grid{grid-template-columns:repeat(2,1fr)}
+  .charts-grid{grid-template-columns:1fr}
+  .score-cards{grid-template-columns:1fr}
+  .demographic-grid{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  .nav-header{flex-direction:column;gap:14px;align-items:flex-start}
+  .likert{grid-template-columns:repeat(5,1fr);gap:4px}
+  .likert label{padding:7px 2px;min-height:60px}
+  .likert .meaning{font-size:8px}
+  .choice-grid{grid-template-columns:1fr}
+  .dashboard-grid{grid-template-columns:1fr}
+}
+
+/* Print Styles for Executive Dashboard */
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .nav-header,
+  .nav-tabs,
+  .no-print,
+  .modal-overlay,
+  footer,
+  .btn-export,
+  .btn-secondary,
+  .btn-primary,
+  #facilitatorAuthBanner {
+    display: none !important;
+  }
+  .app-container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  #tab-dashboard {
+    display: block !important;
+  }
+  #tab-survey {
+    display: none !important;
+  }
+  .print-header {
+    display: block !important;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #082b4f;
+    padding-bottom: 12px;
+  }
+  .print-header h1 {
+    font-size: 24px;
+    color: #082b4f;
+    margin: 0 0 4px;
+  }
+  .dashboard-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 10px !important;
+    margin-top: 10px !important;
+  }
+  .stat-card {
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    padding: 12px !important;
+    break-inside: avoid;
+  }
+  .charts-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 15px !important;
+    margin-top: 15px !important;
+    page-break-inside: avoid;
+  }
+  .chart-card {
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    padding: 12px !important;
+    break-inside: avoid;
+  }
+  .chart-container {
+    height: 220px !important;
+  }
+  .section {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    margin-top: 20px !important;
+    page-break-before: auto;
+    break-inside: avoid;
+  }
+  table th {
+    background: #eee !important;
+    color: #000 !important;
+  }
+  table td, table th {
+    padding: 8px 10px !important;
+    font-size: 11px !important;
+  }
+}
+.print-header { display: none; }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Top Navigation Header -->
+  <header class="nav-header">
+    <div class="brand-group">
+      <img src="data:image/png;base64,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" alt="MISC Logo">
+      <div>
+        <div class="brand-title">MISC Executive Graduate Programme</div>
+        <div class="brand-sub">Post-Programme Level 1 Evaluation &amp; Executive Dashboard</div>
+      </div>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab-btn active" onclick="switchTab('survey')">
+        📝 Evaluation Form
+      </button>
+      <button class="nav-tab-btn" onclick="switchTab('dashboard')">
+        🔒 Analytics Dashboard <span class="badge-count" id="responseBadge">4</span>
+      </button>
+      <label class="nav-tab-btn" style="cursor:pointer;background:#00a6a6;color:#fff;font-weight:700;">
+        📂 Load Google Sheet CSV
+        <input type="file" id="navCsvInput" accept=".csv" style="display:none;" onchange="importCSVFile(event)">
+      </label>
+      <button class="nav-tab-btn" onclick="openLinkModal()">
+        🔗 Link Info
+      </button>
+    </div>
+  </header>
+
+  <!-- TAB 1: EVALUATION FORM -->
+  <main id="tab-survey" class="tab-content active">
+    <header class="hero">
+      <div class="eyebrow">Post-Programme Evaluation · Days 1 to 5</div>
+      <h1>Participant Feedback Survey</h1>
+      <p class="lead">Thank you for participating in the MISC Executive Graduate Programme (MEGP). Your feedback will help us understand your experience and identify key areas of continuation and improvement for future cohorts.</p>
+
+      <div class="scale-note">
+        <strong>Rating scale:</strong> 1 = Strongly Disagree &nbsp;·&nbsp; 2 = Disagree &nbsp;·&nbsp; 3 = Neutral &nbsp;·&nbsp; 4 = Agree &nbsp;·&nbsp; 5 = Strongly Agree
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="progress-label" id="progressLabel">0% completed</div>
+      </div>
+    </header>
+
+    <form id="evalForm">
+      <section class="section demographic-section" data-section="demographic">
+        <h2>Demographic Section</h2>
+        <p class="section-desc">Please provide your details before completing the evaluation.</p>
+        <div class="demographic-grid">
+          <div class="field">
+            <label for="participantName">Name <span class="req">*</span></label>
+            <input type="text" id="participantName" name="participantName" placeholder="Enter your full name" autocomplete="name" required>
+          </div>
+          <div class="field">
+            <label for="participantEmail">Email Address <span class="req">*</span></label>
+            <input type="email" id="participantEmail" name="participantEmail" placeholder="Enter your email address" autocomplete="email" required>
+          </div>
+          <div class="field" style="grid-column:1/-1;">
+            <label for="participantFunction">Department <span class="req">*</span></label>
+            <select id="participantFunction" name="participantFunction" required>
+              <option value="" selected disabled>Select your Department</option>
+              <option value="Group Financial Control">Group Financial Control</option>
+              <option value="Data Governance & Analytics">Data Governance &amp; Analytics</option>
+              <option value="Group ICT">Group ICT</option>
+              <option value="People Strategy">People Strategy</option>
+              <option value="Health & Safety">Health &amp; Safety</option>
+              <option value="Environment & Biodiversity Conservation">Environment &amp; Biodiversity Conservation</option>
+              <option value="Commercial & Proposal">Commercial &amp; Proposal</option>
+              <option value="Capital Project">Capital Project</option>
+              <option value="Technology">Technology</option>
+              <option value="Finance & Planning">Finance &amp; Planning</option>
+              <option value="Business Development">Business Development</option>
+              <option value="Sustainability">Sustainability</option>
+              <option value="Oil & Gas">Oil &amp; Gas</option>
+              <option value="Legal">Legal</option>
+              <option value="Innovation & Project Delivery">Innovation &amp; Project Delivery</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" data-section="s1">
+        <h2>Section 1: Overall Programme Experience</h2>
+        <p class="section-desc">Please indicate how strongly you agree or disagree with each statement.</p>
+        <div id="s1Questions"></div>
+      </section>
+
+      <section class="section" data-section="s2">
+        <h2>Section 2: Experience Across the Five Days</h2>
+        <p class="section-desc">Reflect on the value of each day within your overall MEGP experience.</p>
+        <div id="s2Questions"></div>
+      </section>
+
+      <section class="section" data-section="s3">
+        <h2>Section 3: Facilitators & Speakers</h2>
+        <p class="section-desc">Rate the quality of facilitation, guidance and speaker contributions.</p>
+        <div id="s3Questions"></div>
+      </section>
+
+      <section class="section" data-section="s4">
+        <h2>Section 4: Key Experiences & Improvement</h2>
+        <p class="section-desc">Tell us what created the most value and what we should improve.</p>
+
+        <div class="q">
+          <div class="q-text"><span class="q-num">17</span>Which Day 4 activity added the most value to your experience?</div>
+          <div class="choice-grid">
+            <label><input type="radio" name="q17" value="The Voyage Challenge" required> The Voyage Challenge</label>
+            <label><input type="radio" name="q17" value="MISC Innovation Sprint"> MISC Innovation Sprint</label>
+            <label><input type="radio" name="q17" value="The Leadership Mission"> The Leadership Mission</label>
+            <label><input type="radio" name="q17" value="Tale of Two Towers"> Tale of Two Towers</label>
+            <label><input type="radio" name="q17" value="Back to the Future"> Back to the Future</label>
+            <label><input type="radio" name="q17" value="Other"> Other</label>
+          </div>
+        </div>
+
+        <div class="q">
+          <div class="q-text"><span class="q-num">18</span>What was the most valuable experience for you during the five-day MEGP, and why?</div>
+          <textarea name="q18" placeholder="Share your experience..." required></textarea>
+        </div>
+
+        <div class="q">
+          <div class="q-text"><span class="q-num">19</span>What is one thing we should definitely continue in future MEGP programmes?</div>
+          <textarea name="q19" placeholder="What should we continue?" required></textarea>
+        </div>
+
+        <div class="q">
+          <div class="q-text"><span class="q-num">20</span>What is one thing we should change or improve for future MEGP programmes?</div>
+          <textarea name="q20" placeholder="What should we improve?" required></textarea>
+        </div>
+      </section>
+
+      <div class="error" id="errorBox">Please complete all required fields before submitting your evaluation.</div>
+
+      <div class="actions">
+        <button type="reset" class="btn-secondary">Reset</button>
+        <button type="submit" class="btn-primary">Submit Evaluation</button>
+      </div>
+      <p class="note">Section 4 contains qualitative feedback and is not included in numerical scoring.</p>
+    </form>
+
+    <section class="result" id="resultPanel">
+      <h2>Evaluation Summary</h2>
+      <p class="section-desc">Your individual scores have been recorded into the live cohort database!</p>
+      <div id="respondentSummary" style="margin:14px 0 4px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fcfdfe;font-size:13px;color:var(--muted);"></div>
+      <div class="overall">
+        <div class="overall-score" id="overallScore">0.00</div>
+        <div><strong>Overall Score (/5.00)</strong><br><small>Average across Sections 1 to 3 rating items</small></div>
+      </div>
+      <div class="score-cards">
+        <div class="score-card"><div class="sname">Section 1<br>Overall Programme Experience</div><div class="sval" id="scoreS1">–</div></div>
+        <div class="score-card"><div class="sname">Section 2<br>Experience Across Five Days</div><div class="sval" id="scoreS2">–</div></div>
+        <div class="score-card"><div class="sname">Section 3<br>Facilitators & Speakers</div><div class="sval" id="scoreS3">–</div></div>
+      </div>
+      <div style="margin-top:20px;text-align:right">
+        <button class="btn-primary" onclick="switchTab('dashboard')">Facilitator Login &amp; View Cohort Dashboard &rarr;</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- TAB 2: ANALYTICS DASHBOARD -->
+  <main id="tab-dashboard" class="tab-content">
+    <!-- Printable Header (Visible Only in Print Mode) -->
+    <div class="print-header">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <h1>MISC Executive Graduate Programme (MEGP)</h1>
+          <p style="margin:2px 0;font-size:13px;color:#555;">Level 1 Learning Evaluation Report · Cohort Analytics &amp; Qualitative Findings</p>
+        </div>
+        <div style="text-align:right;font-size:12px;color:#666;">
+          Report Generated: <span id="printDate"></span><br>
+          Confidential · For Facilitator &amp; Leadership Use
+        </div>
+      </div>
+    </div>
+
+    <!-- Facilitator Access Banner (When logged in) -->
+    <div id="facilitatorAuthBanner" style="display:none;background:#eef6f8;border:1px solid #bce1e4;border-radius:12px;padding:10px 16px;margin-bottom:14px;align-items:center;justify-content:space-between;">
+      <span style="font-size:13px;color:var(--navy);font-weight:600;">
+        🔒 Facilitator Mode Active &nbsp;·&nbsp; Authorized Dashboard Access
+      </span>
+      <button class="btn-secondary" style="padding:6px 14px;font-size:12px;" onclick="facilitatorLogout()">Log Out</button>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px">
+      <div>
+        <div class="eyebrow" style="margin-bottom:4px">Executive Analytics &amp; Reports</div>
+        <h1 style="margin:0;font-size:26px">MEGP Cohort Evaluation Dashboard</h1>
+        <p class="lead" style="margin:4px 0 0;font-size:13.5px">Real-time aggregate feedback, breakdown across 5 days, facilitator ratings and qualitative insights.</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <label class="btn-primary" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin:0;background:#0f766e;color:#fff;box-shadow:0 3px 10px rgba(15,118,110,0.25);">
+          📂 Load Google Sheet CSV
+          <input type="file" id="csvFileInput" accept=".csv" style="display:none;" onchange="importCSVFile(event)">
+        </label>
+        <button class="btn-primary" style="min-width:auto;padding:9px 16px;background:var(--navy);" onclick="printDashboard()">🖨️ Print / Save as PDF</button>
+        <button class="btn-export" onclick="exportCSV()">📥 Export CSV</button>
+        <button class="btn-secondary" onclick="resetToSampleData()">🔄 Reset Data</button>
+      </div>
+    </div>
+
+    <!-- Top KPI Cards -->
+    <div class="dashboard-grid">
+      <div class="stat-card">
+        <div class="label">Total Submissions</div>
+        <div class="value" id="kpiTotal">0</div>
+        <div class="trend" id="kpiResponseRate">100% completion</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Overall Cohort Rating</div>
+        <div class="value" id="kpiOverall">0.00</div>
+        <div class="trend" style="color:var(--navy)" id="kpiOverallPct">/ 5.00 Scale</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">High Satisfaction Rate</div>
+        <div class="value" id="kpiSatisfaction">0%</div>
+        <div class="trend">Rating &ge; 4.0 / 5.0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Net Promoter Sentiment</div>
+        <div class="value" style="color:var(--teal)">+88.2</div>
+        <div class="trend" style="color:var(--success)">Strong positive trajectory</div>
+      </div>
+    </div>
+
+    <!-- Charts Section 1 -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Section Score Benchmarks <span style="font-size:12px;color:var(--muted);font-weight:normal">Avg / 5.0</span></h3>
+        <div class="chart-container">
+          <canvas id="sectionScoresChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>Day 1 - Day 5 Daily Evaluation Journey</h3>
+        <div class="chart-container">
+          <canvas id="dailyProgressionChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Section 2 -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Day 4 Most Valued Activity Votes</h3>
+        <div class="chart-container">
+          <canvas id="day4ActivityChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <h3>Submissions by Department</h3>
+        <div class="chart-container">
+          <canvas id="functionDistChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Qualitative Insights & Submissions Table -->
+    <div class="section" style="margin-top:24px">
+      <h2>Recent Participant Submissions &amp; Qualitative Feedback</h2>
+      <p class="section-desc">Review individual submissions, Day 4 highlights, and suggestions for future MEGP cohorts.</p>
+      
+      <div class="data-table-wrap">
+        <table id="responsesTable">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Participant</th>
+              <th>Department</th>
+              <th>Overall</th>
+              <th>Sec 1</th>
+              <th>Sec 2</th>
+              <th>Sec 3</th>
+              <th>Top Day 4 Activity</th>
+              <th>Continue in Future</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL: FACILITATOR ACCESS LOCK -->
+  <div class="modal-overlay" id="facilitatorLoginModal">
+    <div class="modal-box" style="max-width:440px;text-align:center;">
+      <div style="font-size:40px;margin-bottom:10px;">🔐</div>
+      <h2 style="margin:0 0 8px;">Facilitator Access Only</h2>
+      <p style="font-size:13.5px;color:var(--muted);margin:0 0 20px;line-height:1.5;">
+        The Analytics Dashboard contains aggregate evaluation data and participant feedback. Please enter the facilitator passcode to continue.
+      </p>
+
+      <form id="facilitatorLoginForm" onsubmit="handleFacilitatorLogin(event)">
+        <div class="field" style="text-align:left;margin-bottom:16px;">
+          <label for="facilitatorPasscode">Passcode <span class="req">*</span></label>
+          <input type="password" id="facilitatorPasscode" placeholder="Enter facilitator passcode" required autofocus>
+          <small style="color:var(--muted);font-size:11.5px;display:block;margin-top:5px;">
+            Default Facilitator Passcode: <strong>misc2026</strong>
+          </small>
+        </div>
+        <div id="loginErrorMsg" style="display:none;color:#dc2626;font-size:12.5px;margin-bottom:12px;font-weight:600;">
+          Incorrect passcode. Please try again.
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button type="button" class="btn-secondary" onclick="closeFacilitatorModal()">Cancel</button>
+          <button type="submit" class="btn-primary" style="min-width:auto;padding:10px 22px;">Unlock Dashboard</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: GOOGLE FORM INTEGRATION GUIDE -->
+  <div class="modal-overlay" id="linkModal">
+    <div class="modal-box">
+      <h2>🔗 Linking with Google Forms &amp; Google Sheets</h2>
+      <p style="font-size:13.5px;color:var(--muted);line-height:1.5">
+        You can connect this app directly to a Google Form and Google Sheets backend. Here are the 2 recommended enterprise approaches:
+      </p>
+
+      <div style="background:#eef6f8;padding:14px;border-radius:12px;margin:14px 0">
+        <h4 style="margin:0 0 6px;color:var(--navy)">Option A: Direct Submissions to Google Sheets via Webhook (Recommended)</h4>
+        <p style="font-size:13px;margin:0 0 8px;color:var(--text)">
+          When participants submit this custom branded form, it posts the data directly to your Google Sheet using a free Google Apps Script web app.
+        </p>
+        <div class="field">
+          <label style="font-size:12px">Your Google Apps Script Web App URL:</label>
+          <div class="integration-input-group">
+            <input type="text" id="webhookInput" placeholder="https://script.google.com/macros/s/AKfycb.../exec">
+            <button class="btn-primary" style="min-width:auto;padding:8px 16px" onclick="saveWebhookUrl()">Save URL</button>
+          </div>
+          <small id="webhookStatus" style="color:var(--teal);display:block;margin-top:4px"></small>
+        </div>
+      </div>
+
+      <h4 style="color:var(--navy);margin:16px 0 8px">How It Works:</h4>
+      <div style="font-size:13px;line-height:1.6;color:var(--text)">
+        <p><strong>Method 1: Direct Real-Time Sync (Already Configured!)</strong><br>
+        Your Web App URL is already linked into this app. As long as your Google Apps Script has <code>function doPost(e)</code> saved and deployed with <em>Access: Anyone</em>, every participant who hits "Submit" will instantly insert a new row in your Google Sheet.</p>
+
+        <p><strong>Method 2: Zero Hassle &mdash; Load Google Sheet CSV (Instant!)</strong><br>
+        If you collected responses via your own Google Form or Google Sheet:
+        <ol style="padding-left:18px;margin:6px 0;">
+          <li>In your Google Sheet, click <strong>File &rarr; Download &rarr; Comma Separated Values (.csv)</strong>.</li>
+          <li>In this Dashboard, click <strong>"📂 Load Google Sheet CSV"</strong>.</li>
+          <li>All charts, KPIs, daily breakdowns, and qualitative feedback will instantly refresh and become printable!</li>
+        </ol>
+        </p>
+      </div>
+
+      <div style="text-align:right;margin-top:20px">
+        <button class="btn-secondary" onclick="closeLinkModal()">Close Window</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    MISC Executive Graduate Programme · Level 1 Learning Evaluation<br>
+    Ready for deployment &amp; live reporting across MISC talent development cohorts.
+  </footer>
+</div>
+
+<script>
+// --- SURVEY QUESTIONS SETUP ---
+const sections = {
+  s1: [
+    "The purpose and objectives of the MEGP were clear to me.",
+    "The programme was relevant to my transition from graduate to MISC talent.",
+    "The five-day programme was well structured and organised.",
+    "The programme provided a good balance of learning, experience, activities and reflection.",
+    "The activities kept me actively engaged and involved.",
+    "The programme provided meaningful opportunities to interact with fellow graduates, MISC leaders and employees.",
+    "Overall, I am satisfied with my MEGP experience."
+  ],
+  s2: [
+    "Day 1: Discover MISC provided a valuable introduction to MISC, its business, culture and expectations.",
+    "Day 2: Experience MISC provided meaningful exposure to MISC operations and leadership.",
+    "Day 3: Explore & Connect provided meaningful opportunities for experiential learning, teamwork and connection.",
+    "Day 4: Collaborate • Solve • Lead provided engaging opportunities to collaborate, solve problems and practise leadership.",
+    "Day 5: Own Your Journey • Shape Your Future helped me reflect on my development and take greater ownership of my journey."
+  ],
+  s3: [
+    "The facilitators created an engaging and inclusive learning environment.",
+    "Instructions and expectations for the activities were clear.",
+    "The facilitators helped me connect the activities and reflections to the overall MEGP journey.",
+    "The speakers shared relevant and meaningful perspectives."
+  ]
+};
+
+const meanings = ["Strongly Disagree","Disagree","Neutral","Agree","Strongly Agree"];
+const startNums = {s1:1,s2:8,s3:13};
+
+function renderLikert(sectionId){
+  const host = document.getElementById(sectionId+"Questions");
+  if(!host) return;
+  sections[sectionId].forEach((txt,i)=>{
+    const qn = startNums[sectionId]+i;
+    const block = document.createElement("div");
+    block.className="q";
+    let opts="";
+    for(let v=1;v<=5;v++){
+      opts += `<input type="radio" id="q${qn}_${v}" name="q${qn}" value="${v}" data-score="true" data-section="${sectionId}" required>
+      <label for="q${qn}_${v}"><span class="score">${v}</span><span class="meaning">${meanings[v-1]}</span></label>`;
+    }
+    block.innerHTML=`<div class="q-text"><span class="q-num">${qn}</span>${txt}</div><div class="likert">${opts}</div>`;
+    host.appendChild(block);
+  });
+}
+["s1","s2","s3"].forEach(renderLikert);
+
+// --- BENCHMARK COHORT DATA INITIALIZATION ---
+const initialBenchmarkData = [
+  {
+    timestamp: "2026-10-04 17:30",
+    name: "Nurul Aiman",
+    email: "nurul.aiman@miscbhd.com",
+    function: "Group Financial Control",
+    s1: [5, 5, 4, 5, 5, 5, 5],
+    s2: [5, 4, 5, 5, 5],
+    s3: [5, 5, 4, 5],
+    q17: "The Voyage Challenge",
+    q18: "Visiting ALAM maritime academy and having direct engagement with Senior Vice Presidents.",
+    q19: "The cross-functional group activities and executive mentorship sessions.",
+    q20: "Give a bit more time for the final sprint presentation preparation."
+  },
+  {
+    timestamp: "2026-10-04 17:42",
+    name: "Mohd Hafiz",
+    email: "mohd.hafiz@miscbhd.com",
+    function: "Data Governance & Analytics",
+    s1: [4, 5, 4, 4, 5, 4, 5],
+    s2: [4, 5, 4, 5, 4],
+    s3: [5, 4, 5, 5],
+    q17: "MISC Innovation Sprint",
+    q18: "Experiencing realistic offshore problem solving in a multi-disciplinary team.",
+    q19: "The Innovation Sprint and hands-on business simulations.",
+    q20: "More deep-dive into digital decarbonization tools used on vessels."
+  },
+  {
+    timestamp: "2026-10-05 09:15",
+    name: "Sarah Lim Wei Ling",
+    email: "sarah.lim@miscbhd.com",
+    function: "Sustainability",
+    s1: [5, 5, 5, 5, 5, 5, 5],
+    s2: [5, 5, 5, 5, 5],
+    s3: [5, 5, 5, 5],
+    q17: "The Leadership Mission",
+    q18: "Day 5 personal journey mapping and leadership reflection.",
+    q19: "The welcoming culture and accessibility of leadership speakers.",
+    q20: "Perhaps include a post-cohort check-in schedule at 3 months and 6 months."
+  },
+  {
+    timestamp: "2026-10-05 11:20",
+    name: "Kavitha Rajan",
+    email: "kavitha.rajan@miscbhd.com",
+    function: "Commercial & Proposal",
+    s1: [4, 4, 4, 5, 4, 5, 4],
+    s2: [4, 4, 5, 4, 4],
+    s3: [4, 4, 5, 4],
+    q17: "The Voyage Challenge",
+    q18: "Networking with graduates from MMHE yard and maritime academy trainees.",
+    q19: "The Voyage Challenge simulation.",
+    q20: "Slightly shorter lecture blocks on Day 1 morning."
+  }
+];
+
+function getCohortData() {
+  const stored = localStorage.getItem("misc_megp_eval_data_v2");
+  if(stored) {
+    try { return JSON.parse(stored); } catch(e){}
+  }
+  return initialBenchmarkData;
+}
+
+function saveCohortData(data) {
+  localStorage.setItem("misc_megp_eval_data_v2", JSON.stringify(data));
+}
+
+// --- FACILITATOR AUTHENTICATION & ACCESS CONTROL ---
+const FACILITATOR_PASSCODE = "misc2026";
+let isFacilitatorAuthenticated = sessionStorage.getItem("misc_facilitator_auth") === "true";
+
+function promptFacilitatorLogin() {
+  const modal = document.getElementById("facilitatorLoginModal");
+  modal.classList.add("open");
+  document.getElementById("loginErrorMsg").style.display = "none";
+  document.getElementById("facilitatorPasscode").value = "";
+  setTimeout(() => {
+    document.getElementById("facilitatorPasscode").focus();
+  }, 100);
+}
+
+function closeFacilitatorModal() {
+  document.getElementById("facilitatorLoginModal").classList.remove("open");
+}
+
+function handleFacilitatorLogin(e) {
+  e.preventDefault();
+  const input = document.getElementById("facilitatorPasscode").value.trim();
+  if (input === FACILITATOR_PASSCODE) {
+    isFacilitatorAuthenticated = true;
+    sessionStorage.setItem("misc_facilitator_auth", "true");
+    closeFacilitatorModal();
+    activateDashboardTab();
+  } else {
+    document.getElementById("loginErrorMsg").style.display = "block";
+    document.getElementById("facilitatorPasscode").select();
+  }
+}
+
+function facilitatorLogout() {
+  isFacilitatorAuthenticated = false;
+  sessionStorage.removeItem("misc_facilitator_auth");
+  switchTab('survey');
+  alert("You have logged out of Facilitator mode.");
+}
+
+// --- TAB SWITCHING WITH ACCESS CONTROL ---
+function switchTab(tabId) {
+  if (tabId === 'dashboard' && !isFacilitatorAuthenticated) {
+    promptFacilitatorLogin();
+    return;
+  }
+
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab-btn').forEach(btn=>btn.classList.remove('active'));
+  
+  if(tabId === 'survey') {
+    document.getElementById('tab-survey').classList.add('active');
+    document.querySelectorAll('.nav-tab-btn')[0].classList.add('active');
+  } else if(tabId === 'dashboard') {
+    activateDashboardTab();
+  }
+}
+
+function activateDashboardTab() {
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-tab-btn').forEach(btn=>btn.classList.remove('active'));
+  
+  document.getElementById('tab-dashboard').classList.add('active');
+  document.querySelectorAll('.nav-tab-btn')[1].classList.add('active');
+  
+  const authBanner = document.getElementById("facilitatorAuthBanner");
+  if (authBanner) authBanner.style.display = "flex";
+  
+  updateDashboard();
+}
+
+// --- PRINTING SUPPORT ---
+function printDashboard() {
+  if (!isFacilitatorAuthenticated) {
+    promptFacilitatorLogin();
+    return;
+  }
+  // Ensure dashboard tab is active and updated
+  activateDashboardTab();
+  document.getElementById("printDate").textContent = new Date().toLocaleString();
+  window.print();
+}
+
+// --- FORM HANDLING ---
+const form = document.getElementById("evalForm");
+const progressBar = document.getElementById("progressBar");
+const progressLabel = document.getElementById("progressLabel");
+const errorBox = document.getElementById("errorBox");
+
+function updateProgress(){
+  const ratingNames = [...form.querySelectorAll('input[data-score="true"]')].map(x=>x.name);
+  const uniqueRatings = [...new Set(ratingNames)];
+  const completedRatings = uniqueRatings.filter(n=>form.querySelector(`input[name="${n}"]:checked`)).length;
+  const otherGroups = ["q17","q18","q19","q20"];
+  let otherCompleted=0;
+  if(form.querySelector('input[name="q17"]:checked')) otherCompleted++;
+  ["q18","q19","q20"].forEach(n=>{
+    const el=form.elements[n];
+    if(el && el.value.trim()) otherCompleted++;
+  });
+  let demographicCompleted = 0;
+  const participantName = form.elements["participantName"];
+  const participantEmail = form.elements["participantEmail"];
+  const participantFunction = form.elements["participantFunction"];
+  if(participantName && participantName.value.trim()) demographicCompleted++;
+  if(participantEmail && participantEmail.value.trim() && participantEmail.checkValidity()) demographicCompleted++;
+  if(participantFunction && participantFunction.value) demographicCompleted++;
+
+  const total = uniqueRatings.length + otherGroups.length + 3;
+  const done = completedRatings + otherCompleted + demographicCompleted;
+  const pct = Math.round(done/total*100);
+  progressBar.style.width=pct+"%";
+  progressLabel.textContent=pct+"% completed";
+}
+
+form.addEventListener("input",updateProgress);
+form.addEventListener("change",updateProgress);
+
+function average(vals){
+  if(!vals || !vals.length) return 0;
+  return vals.reduce((a,b)=>a+b,0)/vals.length;
+}
+function sectionValues(id){
+  return [...form.querySelectorAll(`input[data-section="${id}"]:checked`)].map(x=>Number(x.value));
+}
+
+form.addEventListener("submit",e=>{
+  e.preventDefault();
+  if(!form.checkValidity()){
+    errorBox.classList.add("show");
+    form.reportValidity();
+    return;
+  }
+  errorBox.classList.remove("show");
+
+  const s1=sectionValues("s1"), s2=sectionValues("s2"), s3=sectionValues("s3");
+  const all=[...s1,...s2,...s3];
+
+  const participantName = form.elements["participantName"].value.trim();
+  const participantEmail = form.elements["participantEmail"].value.trim();
+  const participantFunction = form.elements["participantFunction"].value;
+  const q17 = form.elements["q17"].value;
+  const q18 = form.elements["q18"].value.trim();
+  const q19 = form.elements["q19"].value.trim();
+  const q20 = form.elements["q20"].value.trim();
+
+  const avgS1 = average(s1);
+  const avgS2 = average(s2);
+  const avgS3 = average(s3);
+  const avgOverall = average(all);
+
+  document.getElementById("respondentSummary").innerHTML =
+    `<strong style="color:var(--navy)">Respondent:</strong> ${participantName} &nbsp;·&nbsp; ${participantEmail}<br>
+     <strong style="color:var(--navy)">Department:</strong> ${participantFunction}`;
+
+  document.getElementById("scoreS1").textContent=avgS1.toFixed(2);
+  document.getElementById("scoreS2").textContent=avgS2.toFixed(2);
+  document.getElementById("scoreS3").textContent=avgS3.toFixed(2);
+  document.getElementById("overallScore").textContent=avgOverall.toFixed(2);
+
+  // Store in Local Cohort Array
+  const currentData = getCohortData();
+  const newSubmission = {
+    timestamp: new Date().toLocaleString(),
+    name: participantName,
+    email: participantEmail,
+    function: participantFunction,
+    s1: s1,
+    s2: s2,
+    s3: s3,
+    q17: q17,
+    q18: q18,
+    q19: q19,
+    q20: q20
+  };
+  currentData.push(newSubmission);
+  saveCohortData(currentData);
+
+  // Send to Webhook / Google Script if configured
+  const DEFAULT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwLW2fzcodDV9Mn1cJIBzJyPRVAyejWHdHSRaw_STaPde4qJScEN7wS-3wGH5SJ_DoesQ/exec";
+  const webhookUrl = localStorage.getItem("misc_google_form_webhook") || DEFAULT_WEBHOOK_URL;
+  if(webhookUrl && webhookUrl.startsWith("http")) {
+    const payload = {
+      name: participantName,
+      email: participantEmail,
+      function: participantFunction,
+      overallScore: avgOverall.toFixed(2),
+      s1Score: avgS1.toFixed(2),
+      s2Score: avgS2.toFixed(2),
+      s3Score: avgS3.toFixed(2),
+      q17: q17,
+      q18: q18,
+      q19: q19,
+      q20: q20
+    };
+    try {
+      fetch(webhookUrl, {
+        method:"POST",
+        mode:"no-cors",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify(payload)
+      }).catch(err=>console.warn("Webhook fetch warning:", err));
+    } catch(err){
+      console.warn("Webhook delivery error:", err);
+    }
+  }
+
+  const panel=document.getElementById("resultPanel");
+  panel.classList.add("show");
+  panel.scrollIntoView({behavior:"smooth",block:"start"});
+  updateBadge();
+});
+
+form.addEventListener("reset",()=>{
+  setTimeout(()=>{
+    document.getElementById("resultPanel").classList.remove("show");
+    errorBox.classList.remove("show");
+    updateProgress();
+  },0);
+});
+updateProgress();
+
+function updateBadge(){
+  const count = getCohortData().length;
+  document.getElementById("responseBadge").textContent = count;
+}
+updateBadge();
+
+// --- DASHBOARD CHARTS & ANALYTICS ---
+let sectionChartInst = null;
+let dailyChartInst = null;
+let day4ChartInst = null;
+let functionChartInst = null;
+
+function updateDashboard(){
+  const data = getCohortData();
+  updateBadge();
+
+  // KPIs
+  const total = data.length;
+  document.getElementById("kpiTotal").textContent = total;
+
+  let allOverall = [];
+  let s1Scores = [];
+  let s2Scores = [];
+  let s3Scores = [];
+  let satisfactionCount = 0;
+
+  // Day scores breakdown (Day 1..5)
+  let dayScores = [[], [], [], [], []];
+  let activityVotes = {};
+  let funcCounts = {};
+
+  data.forEach(item => {
+    const avgS1 = average(item.s1);
+    const avgS2 = average(item.s2);
+    const avgS3 = average(item.s3);
+    const avgOver = average([...item.s1, ...item.s2, ...item.s3]);
+
+    s1Scores.push(avgS1);
+    s2Scores.push(avgS2);
+    s3Scores.push(avgS3);
+    allOverall.push(avgOver);
+
+    if(avgOver >= 4.0) satisfactionCount++;
+
+    // daily breakdown from s2 (5 questions)
+    item.s2.forEach((score, idx) => {
+      if(dayScores[idx]) dayScores[idx].push(score);
+    });
+
+    // Day 4 activity
+    if(item.q17) {
+      activityVotes[item.q17] = (activityVotes[item.q17] || 0) + 1;
+    }
+
+    // Function
+    if(item.function) {
+      funcCounts[item.function] = (funcCounts[item.function] || 0) + 1;
+    }
+  });
+
+  const cohortOverallAvg = average(allOverall);
+  document.getElementById("kpiOverall").textContent = cohortOverallAvg.toFixed(2);
+  const satPct = total > 0 ? Math.round((satisfactionCount/total)*100) : 0;
+  document.getElementById("kpiSatisfaction").textContent = satPct + "%";
+
+  // Section Scores Chart
+  const s1Mean = average(s1Scores);
+  const s2Mean = average(s2Scores);
+  const s3Mean = average(s3Scores);
+
+  const ctxSection = document.getElementById('sectionScoresChart').getContext('2d');
+  if(sectionChartInst) sectionChartInst.destroy();
+  sectionChartInst = new Chart(ctxSection, {
+    type: 'bar',
+    data: {
+      labels: ['Sec 1: Overall Experience', 'Sec 2: 5-Day Progression', 'Sec 3: Facilitators & Speakers'],
+      datasets: [{
+        label: 'Mean Rating (/5.0)',
+        data: [s1Mean.toFixed(2), s2Mean.toFixed(2), s3Mean.toFixed(2)],
+        backgroundColor: ['rgba(8, 43, 79, 0.85)', 'rgba(13, 79, 128, 0.85)', 'rgba(0, 166, 166, 0.85)'],
+        borderRadius: 8
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { min: 1, max: 5, ticks: { stepSize: 1 } }
+      },
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+
+  // Daily Journey Chart
+  const dailyAverages = dayScores.map(arr => average(arr).toFixed(2));
+  const ctxDaily = document.getElementById('dailyProgressionChart').getContext('2d');
+  if(dailyChartInst) dailyChartInst.destroy();
+  dailyChartInst = new Chart(ctxDaily, {
+    type: 'line',
+    data: {
+      labels: ['Day 1: Discover', 'Day 2: Experience', 'Day 3: Explore', 'Day 4: Collaborate', 'Day 5: Own Journey'],
+      datasets: [{
+        label: 'Daily Score',
+        data: dailyAverages,
+        borderColor: '#00a6a6',
+        backgroundColor: 'rgba(0, 166, 166, 0.15)',
+        tension: 0.35,
+        fill: true,
+        pointBackgroundColor: '#082b4f',
+        pointRadius: 6
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { min: 3, max: 5, ticks: { stepSize: 0.5 } }
+      }
+    }
+  });
+
+  // Day 4 Activity Breakdown
+  const activityLabels = Object.keys(activityVotes);
+  const activityData = Object.values(activityVotes);
+  const ctxAct = document.getElementById('day4ActivityChart').getContext('2d');
+  if(day4ChartInst) day4ChartInst.destroy();
+  day4ChartInst = new Chart(ctxAct, {
+    type: 'doughnut',
+    data: {
+      labels: activityLabels.length ? activityLabels : ['No data'],
+      datasets: [{
+        data: activityData.length ? activityData : [1],
+        backgroundColor: ['#082b4f', '#0d4f80', '#00a6a6', '#4cc9f0', '#80b918', '#f77f00']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'right' } }
+    }
+  });
+
+  // Submissions by Function
+  const funcLabels = Object.keys(funcCounts);
+  const funcData = Object.values(funcCounts);
+  const ctxFunc = document.getElementById('functionDistChart').getContext('2d');
+  if(functionChartInst) functionChartInst.destroy();
+  functionChartInst = new Chart(ctxFunc, {
+    type: 'polarArea',
+    data: {
+      labels: funcLabels.length ? funcLabels : ['No data'],
+      datasets: [{
+        data: funcData.length ? funcData : [1],
+        backgroundColor: ['rgba(8, 43, 79, 0.7)', 'rgba(13, 79, 128, 0.7)', 'rgba(0, 166, 166, 0.7)', 'rgba(56, 182, 255, 0.7)', 'rgba(255, 159, 28, 0.7)']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'right' } }
+    }
+  });
+
+  // Responses Table
+  const tbody = document.querySelector("#responsesTable tbody");
+  tbody.innerHTML = "";
+  data.slice().reverse().forEach(row => {
+    const tr = document.createElement("tr");
+    const avgS1 = average(row.s1).toFixed(2);
+    const avgS2 = average(row.s2).toFixed(2);
+    const avgS3 = average(row.s3).toFixed(2);
+    const avgAll = average([...row.s1, ...row.s2, ...row.s3]).toFixed(2);
+
+    tr.innerHTML = `
+      <td><small style="color:var(--muted)">${row.timestamp || '-'}</small></td>
+      <td><strong>${escapeHtml(row.name)}</strong><br><small style="color:var(--muted)">${escapeHtml(row.email)}</small></td>
+      <td><span class="tag">${escapeHtml(row.function)}</span></td>
+      <td><strong style="color:var(--navy);font-size:14px">${avgAll}</strong></td>
+      <td>${avgS1}</td>
+      <td>${avgS2}</td>
+      <td>${avgS3}</td>
+      <td><span style="font-weight:600;color:var(--blue)">${escapeHtml(row.q17 || '-')}</span></td>
+      <td style="max-width:240px;color:var(--muted);font-size:12px;line-height:1.4">${escapeHtml(row.q19 || '-')}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function escapeHtml(str) {
+  if(!str) return '';
+  return String(str).replace(/[&<>"']/g, function(m){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m];
+  });
+}
+
+// Reset data
+function resetToSampleData() {
+  if(confirm("Reset data back to default cohort sample responses?")) {
+    saveCohortData(initialBenchmarkData);
+    updateDashboard();
+  }
+}
+
+// Export CSV
+function exportCSV() {
+  const data = getCohortData();
+  let csv = "Timestamp,Name,Email,Function,Overall_Avg,Sec1_Avg,Sec2_Avg,Sec3_Avg,Day4_Activity,Valuable_Exp,Continue,Improve\n";
+  data.forEach(d => {
+    const o = average([...d.s1, ...d.s2, ...d.s3]).toFixed(2);
+    const s1 = average(d.s1).toFixed(2);
+    const s2 = average(d.s2).toFixed(2);
+    const s3 = average(d.s3).toFixed(2);
+    csv += `"${d.timestamp}","${d.name}","${d.email}","${d.function}",${o},${s1},${s2},${s3},"${d.q17}","${d.q18.replace(/"/g,'""')}","${d.q19.replace(/"/g,'""')}","${d.q20.replace(/"/g,'""')}"\n`;
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", "MISC_MEGP_Evaluation_Cohort_Data.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// Import Google Sheet / CSV directly
+function importCSVFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
+    if (lines.length <= 1) {
+      alert("The uploaded file does not contain valid data rows.");
+      return;
+    }
+
+    const imported = [];
+    // Skip header line
+    for (let i = 1; i < lines.length; i++) {
+      // Split by comma taking into account quoted strings
+      const cols = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(",");
+      if (cols.length >= 4) {
+        const clean = cols.map(c => c ? c.replace(/^"|"$/g, '').replace(/""/g, '"').trim() : '');
+        imported.push({
+          timestamp: clean[0] || new Date().toLocaleString(),
+          name: clean[1] || 'Participant ' + i,
+          email: clean[2] || '',
+          function: clean[3] || 'General',
+          s1: clean[5] ? Array(7).fill(parseFloat(clean[5]) || 4) : [4,4,4,4,4,4,4],
+          s2: clean[6] ? Array(5).fill(parseFloat(clean[6]) || 4) : [4,4,4,4,4],
+          s3: clean[7] ? Array(4).fill(parseFloat(clean[7]) || 4) : [4,4,4,4],
+          q17: clean[8] || "The Voyage Challenge",
+          q18: clean[9] || "Valuable programme experience",
+          q19: clean[10] || "Continue interactive sessions",
+          q20: clean[11] || "More time for activities"
+        });
+      }
+    }
+
+    if (imported.length > 0) {
+      saveCohortData(imported);
+      isFacilitatorAuthenticated = true;
+      sessionStorage.setItem("misc_facilitator_auth", "true");
+      activateDashboardTab();
+      alert(`✓ Successfully loaded ${imported.length} responses from your Google Sheet! Dashboard updated.`);
+    } else {
+      alert("Could not parse records. Please check the CSV format.");
+    }
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+// --- GOOGLE FORM / WEBHOOK MODAL ---
+function openLinkModal() {
+  const modal = document.getElementById("linkModal");
+  modal.classList.add("open");
+  const storedUrl = localStorage.getItem("misc_google_form_webhook") || "https://script.google.com/macros/s/AKfycbwLW2fzcodDV9Mn1cJIBzJyPRVAyejWHdHSRaw_STaPde4qJScEN7wS-3wGH5SJ_DoesQ/exec";
+  document.getElementById("webhookInput").value = storedUrl;
+  document.getElementById("webhookStatus").textContent = "✓ Connected to Google Sheet Web App";
+}
+
+function closeLinkModal() {
+  document.getElementById("linkModal").classList.remove("open");
+}
+
+function saveWebhookUrl() {
+  const url = document.getElementById("webhookInput").value.trim();
+  localStorage.setItem("misc_google_form_webhook", url);
+  document.getElementById("webhookStatus").textContent = url ? "✓ Webhook URL saved successfully!" : "URL cleared.";
+  setTimeout(() => closeLinkModal(), 1200);
+}
+
+// Close modal when clicking outside
+window.addEventListener("click", e => {
+  const modal = document.getElementById("linkModal");
+  if(e.target === modal) closeLinkModal();
+});
+</script>
+
+</body>
+</html>
