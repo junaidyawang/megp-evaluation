@@ -519,11 +519,11 @@ tr:hover td{
       <button class="nav-tab-btn active" onclick="switchTab('survey')">
         📝 Evaluation Form
       </button>
+      <button class="nav-tab-btn" onclick="openQrModal()">
+        📱 Mobile QR Code
+      </button>
       <button class="nav-tab-btn" onclick="switchTab('dashboard')">
         🔒 Analytics Dashboard <span class="badge-count" id="responseBadge">4</span>
-      </button>
-      <button class="nav-tab-btn" style="cursor:pointer;background:#00a6a6;color:#fff;font-weight:700;" onclick="exportCSV()">
-        📥 Download CSV File
       </button>
     </div>
   </header>
@@ -694,7 +694,7 @@ tr:hover td{
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <button class="btn-primary" style="min-width:auto;padding:9px 16px;background:var(--navy);" onclick="printDashboard()">🖨️ Print / Save as PDF</button>
         <button class="btn-export" onclick="exportCSV()">📥 Download CSV</button>
-        <button class="btn-secondary" onclick="resetToSampleData()">🔄 Reset Sample Data</button>
+        <button class="btn-secondary" style="color:var(--danger);border-color:#fca5a5;" onclick="resetAllData()">🗑️ Reset</button>
       </div>
     </div>
 
@@ -804,6 +804,33 @@ tr:hover td{
     </div>
   </div>
 
+  <!-- MODAL: MOBILE QR CODE FOR PARTICIPANTS -->
+  <div class="modal-overlay" id="qrModal">
+    <div class="modal-box" style="max-width:440px;text-align:center;">
+      <h2 style="margin:0 0 6px;">📱 Participant Evaluation QR Code</h2>
+      <p style="font-size:13px;color:var(--muted);margin:0 0 16px;">
+        Scan with your smartphone camera to complete the post-programme evaluation directly on your phone.
+      </p>
+
+      <div style="background:#fff;padding:18px;border-radius:16px;display:inline-block;border:2px solid #e2e8ec;box-shadow:0 6px 20px rgba(8,43,79,.08);margin-bottom:14px;">
+        <img id="qrImage" src="" alt="Evaluation QR Code" style="width:230px;height:230px;display:block;">
+      </div>
+
+      <div style="margin-top:4px;">
+        <label style="font-size:11.5px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Custom Form / Hosted URL (Optional):</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="qrCustomUrl" placeholder="Enter hosted GitHub / Web link" style="font-size:12px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);flex:1;" oninput="updateQrCode()">
+          <button class="btn-primary" style="min-width:auto;padding:8px 14px;font-size:12px;" onclick="copyQrLink()">Copy Link</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;">
+        <button type="button" class="btn-primary" style="min-width:auto;padding:10px 22px;background:var(--navy);" onclick="printQrCode()">🖨️ Print QR Code Flyer</button>
+        <button type="button" class="btn-secondary" onclick="closeQrModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: GOOGLE FORM INTEGRATION GUIDE -->
   <div class="modal-overlay" id="linkModal">
     <div class="modal-box">
@@ -849,8 +876,7 @@ tr:hover td{
   </div>
 
   <footer>
-    MISC Executive Graduate Programme · Level 1 Learning Evaluation<br>
-    Ready for deployment &amp; live reporting across MISC talent development cohorts.
+    MISC Executive Graduate Programme · Level 1 Learning Evaluation
   </footer>
 </div>
 
@@ -1269,7 +1295,7 @@ function updateDashboard(){
       labels: ['Sec 1: Overall Experience', 'Sec 2: 5-Day Progression', 'Sec 3: Facilitators & Speakers'],
       datasets: [{
         label: 'Mean Rating (/5.0)',
-        data: [s1Mean.toFixed(2), s2Mean.toFixed(2), s3Mean.toFixed(2)],
+        data: [Number(s1Mean.toFixed(2)), Number(s2Mean.toFixed(2)), Number(s3Mean.toFixed(2))],
         backgroundColor: ['rgba(8, 43, 79, 0.85)', 'rgba(13, 79, 128, 0.85)', 'rgba(0, 166, 166, 0.85)'],
         borderRadius: 8
       }]
@@ -1277,13 +1303,40 @@ function updateDashboard(){
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: {
+        padding: { top: 25 }
+      },
       scales: {
-        y: { min: 1, max: 5, ticks: { stepSize: 1 } }
+        y: { min: 1, max: 5.5, ticks: { stepSize: 1 } }
       },
       plugins: {
-        legend: { display: false }
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => `${ctx.raw.toFixed(2)} / 5`
+          }
+        }
       }
-    }
+    },
+    plugins: [{
+      id: 'barRatingLabels',
+      afterDatasetsDraw(chart) {
+        const { ctx } = chart;
+        chart.data.datasets.forEach((dataset, i) => {
+          const meta = chart.getDatasetMeta(i);
+          meta.data.forEach((bar, index) => {
+            const val = dataset.data[index];
+            const text = `${val.toFixed(2)} / 5`;
+            ctx.save();
+            ctx.fillStyle = '#082b4f';
+            ctx.font = 'bold 12.5px Inter, Segoe UI, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(text, bar.x, bar.y - 8);
+            ctx.restore();
+          });
+        });
+      }
+    }]
   });
 
   // Daily Journey Chart
@@ -1382,11 +1435,26 @@ function escapeHtml(str) {
   });
 }
 
-// Reset data
-function resetToSampleData() {
-  if(confirm("Reset data back to default cohort sample responses?")) {
-    saveCohortData(initialBenchmarkData);
+// Reset All Data (Clear local and send clear request to Google Sheet)
+function resetAllData() {
+  if (confirm("⚠️ Are you sure you want to RESET?\n\nThis will permanently delete all collected responses from the dashboard and clear the Google Sheet.")) {
+    saveCohortData([]);
     updateDashboard();
+
+    const webhookUrl = localStorage.getItem("misc_google_form_webhook") || "https://script.google.com/macros/s/AKfycbwLW2fzcodDV9Mn1cJIBzJyPRVAyejWHdHSRaw_STaPde4qJScEN7wS-3wGH5SJ_DoesQ/exec";
+    if (webhookUrl && webhookUrl.startsWith("http")) {
+      try {
+        fetch(webhookUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "reset_all" })
+        });
+      } catch (e) {
+        console.warn("Could not post reset command to sheet", e);
+      }
+    }
+    alert("✓ All evaluation records have been reset.");
   }
 }
 
@@ -1483,10 +1551,77 @@ function saveWebhookUrl() {
   setTimeout(() => closeLinkModal(), 1200);
 }
 
+// --- QR CODE GENERATION & MOBILE MODAL ---
+function getActiveAppUrl() {
+  const custom = document.getElementById("qrCustomUrl") ? document.getElementById("qrCustomUrl").value.trim() : "";
+  if (custom) return custom;
+  if (window.location.protocol.startsWith("http")) return window.location.href;
+  return "https://misc-megp-evaluation.github.io/";
+}
+
+function updateQrCode() {
+  const targetUrl = getActiveAppUrl();
+  const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(targetUrl)}`;
+  const img = document.getElementById("qrImage");
+  if (img) img.src = qrApi;
+}
+
+function openQrModal() {
+  const modal = document.getElementById("qrModal");
+  modal.classList.add("open");
+  const input = document.getElementById("qrCustomUrl");
+  if (input && !input.value) {
+    input.value = window.location.protocol.startsWith("http") ? window.location.href : "";
+  }
+  updateQrCode();
+}
+
+function closeQrModal() {
+  document.getElementById("qrModal").classList.remove("open");
+}
+
+function copyQrLink() {
+  const link = getActiveAppUrl();
+  navigator.clipboard.writeText(link).then(() => {
+    alert("✓ Evaluation form link copied to clipboard!\n" + link);
+  }).catch(() => {
+    prompt("Copy this URL:", link);
+  });
+}
+
+function printQrCode() {
+  const targetUrl = getActiveAppUrl();
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>MISC MEGP - Evaluation QR Code</title>
+        <style>
+          body { font-family: Segoe UI, Arial, sans-serif; text-align: center; padding: 40px; color: #082b4f; }
+          h1 { margin-bottom: 6px; }
+          p { color: #555; font-size: 16px; margin: 0 0 24px; }
+          img { width: 300px; height: 300px; border: 4px solid #082b4f; border-radius: 16px; padding: 12px; }
+          .url { margin-top: 20px; font-weight: bold; font-size: 14px; color: #00a6a6; }
+        </style>
+      </head>
+      <body>
+        <h1>MISC Executive Graduate Programme</h1>
+        <p>Post-Programme Level 1 Evaluation · Scan to Respond on Mobile</p>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}">
+        <div class="url">${targetUrl}</div>
+        <script>window.onload = function() { window.print(); }<\/script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
+
 // Close modal when clicking outside
 window.addEventListener("click", e => {
-  const modal = document.getElementById("linkModal");
-  if(e.target === modal) closeLinkModal();
+  const linkModal = document.getElementById("linkModal");
+  const qrModal = document.getElementById("qrModal");
+  if (e.target === linkModal) closeLinkModal();
+  if (e.target === qrModal) closeQrModal();
 });
 </script>
 
